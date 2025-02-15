@@ -1,11 +1,10 @@
-package ra.doantotnghiep2025.model;
+package ra.doantotnghiep2025.model.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -33,7 +32,6 @@ public class Products {
     @Column(name = "product_price", nullable = false)
     private double productPrice;
 
-    @Min(0)
     @Column(name = "product_quantity", nullable = false)
     private int productQuantity;
 

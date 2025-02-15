@@ -1,4 +1,4 @@
-package ra.doantotnghiep2025.model;
+package ra.doantotnghiep2025.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

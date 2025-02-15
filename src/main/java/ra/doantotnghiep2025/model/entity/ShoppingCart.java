@@ -1,6 +1,7 @@
-package ra.doantotnghiep2025.model;
+package ra.doantotnghiep2025.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @NoArgsConstructor
@@ -24,6 +25,7 @@ public class ShoppingCart {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Min(0)
     @Column(name = "order_quantity", nullable = false)
     private int orderQuantity;
 }
