@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -14,15 +14,16 @@ import java.util.UUID;
 @Setter
 @Builder
 @Entity
-@Table(name = "orders") // Sửa đúng tên bảng
-public class Orders {
+@Table(name = "orders")
+public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "order_id") // Sửa đúng tên cột
+    @Column(name = "order_id")
     private Long orderId;
 
-    @Column(name = "serial_number", nullable = false, unique = true, length = 100)
-    private String serialNumber;
+    @Column(name = "serial_number", nullable = false, unique = true, length = 100, updatable = false)
+    private String serialNumber = UUID.randomUUID().toString();
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -33,7 +34,7 @@ public class Orders {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.WAITING; // Mặc định là WAITING
 
     @Column(name = "note", length = 100)
     private String note;
@@ -47,20 +48,17 @@ public class Orders {
     @Column(name = "receive_phone", nullable = false, length = 15)
     private String receivePhone;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "received_at")
-    private Date receivedAt;
+    private LocalDateTime receivedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<OrderDetail> orderDetails;
 
     @PrePersist
     protected void onCreate() {
-        this.serialNumber = UUID.randomUUID().toString();
-        this.createdAt = new Date();
+        this.receivedAt = createdAt.plusDays(4);
     }
 }

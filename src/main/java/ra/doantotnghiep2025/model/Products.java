@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -21,7 +22,7 @@ public class Products {
     private Long productId;
 
     @Column(name = "sku", unique = true, nullable = false, length = 100)
-    private String productSku;
+    private String productSku = UUID.randomUUID().toString();
 
     @Column(name = "product_name", unique = true, nullable = false, length = 100)
     private String productName;
@@ -39,28 +40,18 @@ public class Products {
     @Column(name = "product_image", length = 255)
     private String productImage;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private Category category;
 
-    // Gán UUID & createdAt khi lưu vào DB
-    @PrePersist
-    protected void onCreate() {
-        this.productSku = UUID.randomUUID().toString();
-        this.createdAt = new Date();
-    }
-
-    // Cập nhật thời gian khi có chỉnh sửa
     @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = new Date();
+    public void setUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
