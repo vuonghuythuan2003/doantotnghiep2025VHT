@@ -22,6 +22,6 @@ public class Category {
     @Column(name="category_description", length = 255)
     private String categoryDescription;
 
-    @Column(name = "status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Column(name = "status", nullable = false, columnDefinition = "bit DEFAULT true")
     private boolean status;
 }

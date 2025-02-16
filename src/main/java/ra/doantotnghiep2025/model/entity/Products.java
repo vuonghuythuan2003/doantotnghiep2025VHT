@@ -44,6 +44,9 @@ public class Products {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "sold_quantity", nullable = false)
+    private int soldQuantity = 0;
+
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "category_id")
     private Category category;

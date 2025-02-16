@@ -18,5 +18,5 @@ public class CategoryRequestDTO {
 
     private String description;
 
-    private Boolean status;
+
 }

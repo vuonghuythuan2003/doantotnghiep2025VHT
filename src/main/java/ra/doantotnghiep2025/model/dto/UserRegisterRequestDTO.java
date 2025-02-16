@@ -28,6 +28,9 @@ public class UserRegisterRequestDTO {
     @NotBlank(message = "Họ và tên không được để trống")
     private String fullName;
 
+    @NotBlank(message = "Địa chỉ không được để trống")
+    private String address;
+
     @Pattern(regexp = "^\\d{10,11}$", message = "Số điện thoại phải có 10-11 chữ số")
     private String phoneNumber;
 }

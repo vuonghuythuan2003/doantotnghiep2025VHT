@@ -29,6 +29,9 @@ public class ProductRequestDTO {
     @Min(value = 0, message = "Số lượng tồn kho không được âm")
     private Integer stockQuantity;
 
+    @Min(value = 0, message = "Số lượng bán không được âm")
+    private Integer soldQuantity;
+
     private String image;
 
     @NotNull(message = "Mã danh mục không được để trống")

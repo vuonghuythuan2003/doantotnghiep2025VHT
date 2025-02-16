@@ -14,6 +14,7 @@ public class ProductReponseDTO {
     private String description;
     private Double unitPrice;
     private Integer stockQuantity;
+    private Integer soldQuantity;
     private String image;
     private Long categoryId;
     private Date createdAt;

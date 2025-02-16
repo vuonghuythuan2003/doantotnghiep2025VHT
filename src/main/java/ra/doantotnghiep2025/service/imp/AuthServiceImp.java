@@ -2,13 +2,14 @@ package ra.doantotnghiep2025.service.imp;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-import ra.doantotnghiep2025.exception.CustomerException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.model.entity.Role;
+import ra.doantotnghiep2025.model.entity.RoleType;
 import ra.doantotnghiep2025.model.entity.User;
 import ra.doantotnghiep2025.repository.RoleRepository;
 import ra.doantotnghiep2025.repository.UserRepository;
@@ -30,14 +31,17 @@ public class AuthServiceImp implements AuthService {
     private UserRepository userRepository;
     @Autowired
     private JwtProvider jwtProvider;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public UserLoginResponse login(UserLoginRequestDto userLoginRequestDTO) {
-        Authentication authentication;
-        authentication = authenticationProvider.authenticate(new UsernamePasswordAuthenticationToken(
-                userLoginRequestDTO.getUsername(),
-                userLoginRequestDTO.getPassword())
+        Authentication authentication = authenticationProvider.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        userLoginRequestDTO.getUsername(),
+                        userLoginRequestDTO.getPassword())
         );
+
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         return UserLoginResponse.builder()
                 .username(userPrinciple.getUsername())
@@ -48,32 +52,66 @@ public class AuthServiceImp implements AuthService {
     }
 
     @Override
-    public UserRegisterResponseDTO register(UserRegisterRequestDTO userRegisterDTO) {
+    public UserRegisterResponseDTO register(UserRegisterRequestDTO userRegisterDTO) throws CustomerException {
+        if (userRegisterDTO.getUsername() == null || userRegisterDTO.getPassword() == null) {
+            throw new CustomerException("Tên đăng nhập và mật khẩu không được để trống");
+        }
+
+        if (userRepository.existsByUsername(userRegisterDTO.getUsername())) {
+            throw new CustomerException("Tên người dùng đã tồn tại");
+        }
+
+        Role role = roleRepository.findRoleByRoleName(RoleType.USER);
+        if (role == null) {
+            throw new CustomerException("Không tìm thấy vai trò NGƯỜI DÙNG trong cơ sở dữ liệu");
+        }
+
         Set<Role> roles = new HashSet<>();
-        Role role = roleRepository.findRoleByRoleName("USER");
         roles.add(role);
+
+        String encodedPassword = passwordEncoder.encode(userRegisterDTO.getPassword());
+
         User user = User.builder()
                 .username(userRegisterDTO.getUsername())
-                .password(new BCryptPasswordEncoder().encode(userRegisterDTO.getPassword()))
+                .password(encodedPassword)
                 .status(true)
                 .roles(roles)
+                .isDeleted(false)
+                .email(userRegisterDTO.getEmail())
+                .fullname(userRegisterDTO.getFullName())
+                .phone(userRegisterDTO.getPhoneNumber())
+                .address(userRegisterDTO.getAddress() != null ? userRegisterDTO.getAddress() : "Chưa cập nhật")
                 .build();
+
         User userNew = userRepository.save(user);
 
-        return UserRegisterResponseDTO.builder().username(userNew.getUsername()).build();
+        return UserRegisterResponseDTO.builder()
+                .username(userNew.getUsername())
+                .roles(userNew.getRoles())
+                .build();
     }
 
     @Override
     public UserRegisterResponseDTO updatePermission(UserPermissionDTO userPermissionDTO, Long userId) throws CustomerException {
-        User user = userRepository.findById(userId).orElseThrow(()->new CustomerException("User NOT FOUND"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomerException("User NOT FOUND"));
+
         Set<Role> roles = new HashSet<>();
-        for (String roleName: userPermissionDTO.getRoleName()) {
-            Role role = roleRepository.findRoleByRoleName(roleName);
-            roles.add(role);
+        for (String roleName : userPermissionDTO.getRoleName()) {
+            try {
+                RoleType roleType = RoleType.valueOf(roleName);
+                Role role = roleRepository.findRoleByRoleName(roleType);
+                if (role != null) {
+                    roles.add(role);
+                }
+            } catch (IllegalArgumentException e) {
+                throw new CustomerException("Invalid role name: " + roleName);
+            }
         }
-        // cap nhat vai tro moi
+
         user.setRoles(roles);
         User userUpdate = userRepository.save(user);
+
         return UserRegisterResponseDTO.builder()
                 .username(userUpdate.getUsername())
                 .roles(userUpdate.getRoles())

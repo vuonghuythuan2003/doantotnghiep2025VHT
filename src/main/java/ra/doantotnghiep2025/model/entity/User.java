@@ -32,6 +32,7 @@ public class User {
 
     @Column(name = "password", nullable = false, length = 255)
     private String password;
+
     @Column(name = "avatar", length = 255)
     private String avatar;
 
@@ -39,10 +40,10 @@ public class User {
     private String phone;
 
     @Column(name = "address", length = 255, nullable = false)
-    private String address;
+    private String address = "Chưa cập nhật";
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
@@ -57,4 +58,15 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
