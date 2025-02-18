@@ -5,10 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ra.doantotnghiep2025.exception.CustomerException;
-import ra.doantotnghiep2025.model.dto.UserLoginRequestDto;
-import ra.doantotnghiep2025.model.dto.UserLoginResponse;
-import ra.doantotnghiep2025.model.dto.UserRegisterRequestDTO;
-import ra.doantotnghiep2025.model.dto.UserRegisterResponseDTO;
+import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.service.AuthService;
 import ra.doantotnghiep2025.service.TokenService;
 
@@ -31,6 +28,5 @@ public class AuthController {
         UserLoginResponse responseDTO = authService.login(requestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
-
 
 }

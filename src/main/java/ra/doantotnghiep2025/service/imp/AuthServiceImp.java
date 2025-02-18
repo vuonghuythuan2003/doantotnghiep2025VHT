@@ -91,30 +91,4 @@ public class AuthServiceImp implements AuthService {
                 .build();
     }
 
-    @Override
-    public UserRegisterResponseDTO updatePermission(UserPermissionDTO userPermissionDTO, Long userId) throws CustomerException {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomerException("User NOT FOUND"));
-
-        Set<Role> roles = new HashSet<>();
-        for (String roleName : userPermissionDTO.getRoleName()) {
-            try {
-                RoleType roleType = RoleType.valueOf(roleName);
-                Role role = roleRepository.findRoleByRoleName(roleType);
-                if (role != null) {
-                    roles.add(role);
-                }
-            } catch (IllegalArgumentException e) {
-                throw new CustomerException("Invalid role name: " + roleName);
-            }
-        }
-
-        user.setRoles(roles);
-        User userUpdate = userRepository.save(user);
-
-        return UserRegisterResponseDTO.builder()
-                .username(userUpdate.getUsername())
-                .roles(userUpdate.getRoles())
-                .build();
-    }
 }

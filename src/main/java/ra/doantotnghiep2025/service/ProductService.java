@@ -16,5 +16,4 @@ public interface ProductService {
     List<ProductReponseDTO> getProductsByCategory(Long categoryId, int page, int size);
     ProductReponseDTO getProductById(Long productId) throws CustomerException;
 
-
 }
