@@ -7,15 +7,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ra.doantotnghiep2025.exception.CustomerException;
-import ra.doantotnghiep2025.model.dto.UserRegisterResponseDTO;
-import ra.doantotnghiep2025.model.dto.UserResponseDTO;
+import ra.doantotnghiep2025.model.dto.*;
+import ra.doantotnghiep2025.model.entity.Category;
+import ra.doantotnghiep2025.model.entity.Products;
 import ra.doantotnghiep2025.model.entity.Role;
 import ra.doantotnghiep2025.model.entity.User;
+import ra.doantotnghiep2025.repository.CategoryRepository;
+import ra.doantotnghiep2025.repository.ProductRepository;
 import ra.doantotnghiep2025.repository.RoleRepository;
 import ra.doantotnghiep2025.repository.UserRepository;
 import ra.doantotnghiep2025.service.AdminService;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -25,7 +30,10 @@ public class AdminServiceImp implements AdminService {
     private UserRepository userRepository;
     @Autowired
     private RoleRepository roleRepository;
-    
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
     
     @Override
     public Page<UserResponseDTO> getUsers(int page, int size, String sortBy, String direction) {
@@ -79,6 +87,165 @@ public class AdminServiceImp implements AdminService {
                 .email(user.getEmail())
                 .fullname(user.getFullname())
                 .status(user.getStatus())
+                .build();
+    }
+
+    @Override
+    public List<RoleResponseDTO> getRole() {
+        List<Role> roles = roleRepository.findAll();
+        return roles.stream().map(
+                respon -> RoleResponseDTO.builder()
+                        .id(respon.getRoleId())
+                        .roleType(respon.getRoleName())
+                        .build()
+        ).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserResponseDTO> searchByUserName(String userName) {
+        List<User> user = userRepository.findByFullNameContainingIgnoreCase(userName);
+        return user.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ProductReponseDTO> getProducts(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return productRepository.findAll(pageable).map(this::convertToProdcutDto);
+    }
+
+    @Override
+    public ProductReponseDTO getProductById(Long productId) throws CustomerException {
+        Products products = productRepository.findById(productId)
+                .orElseThrow(() -> new CustomerException("Không tìm thấy mã sản phẩm"));
+        return convertToProdcutDto(products);
+    }
+
+    @Override
+    public ProductReponseDTO saveProduct(ProductRequestDTO productRequestDTO) throws CustomerException {
+        if (productRepository.existsByProductName(productRequestDTO.getProductName())) {
+            throw new CustomerException("Tên sản phẩm đã tồn tại!");
+        }
+
+        Category category = categoryRepository.findById(productRequestDTO.getCategoryId())
+                .orElseThrow(() -> new CustomerException("Danh mục không tồn tại!"));
+
+        Products product = Products.builder()
+                .productName(productRequestDTO.getProductName())
+                .productSku(productRequestDTO.getSku())
+                .productDescription(productRequestDTO.getDescription())
+                .productPrice(productRequestDTO.getUnitPrice())
+                .productQuantity(productRequestDTO.getStockQuantity())
+                .soldQuantity(productRequestDTO.getSoldQuantity() != null ? productRequestDTO.getSoldQuantity() : 0)
+                .productImage(productRequestDTO.getImage())
+                .category(category)
+                .build();
+
+        Products savedProduct = productRepository.save(product);
+
+        return convertToProdcutDto(savedProduct);
+    }
+
+    @Override
+    public ProductReponseDTO updateProductById(Long productId, ProductUpdateDTO productRequestDTO) throws CustomerException {
+        Products product = productRepository.findById(productId)
+                .orElseThrow(() -> new CustomerException("Mã sản phẩm không tồn tại"));
+
+        if (!product.getProductName().equals(productRequestDTO.getProductName()) && productRepository.existsByProductName(productRequestDTO.getProductName())) {
+            throw new CustomerException("Tên sản phẩm đã tồn tại");
+        }
+
+        Category category = categoryRepository.findById(productRequestDTO.getCategoryId())
+                .orElseThrow(() -> new CustomerException("Mã danh mục không tồn tại"));
+
+        product.setProductName(productRequestDTO.getProductName());
+        product.setProductSku(productRequestDTO.getSku());
+        product.setProductDescription(productRequestDTO.getDescription());
+        product.setProductPrice(productRequestDTO.getUnitPrice());
+        product.setProductQuantity(productRequestDTO.getStockQuantity());
+        product.setSoldQuantity(productRequestDTO.getSoldQuantity());
+        product.setProductImage(productRequestDTO.getImage());
+        product.setCategory(category);
+
+        productRepository.save(product);
+
+        return convertToProdcutDto(product);
+    }
+
+
+    @Override
+    public boolean deleteProductById(Long productId) throws CustomerException {
+        Products product = productRepository.findById(productId).orElseThrow( ()-> new CustomerException("Mã sản phẩm không tồn tại"));
+        productRepository.delete(product);
+        return true;
+    }
+
+    @Override
+    public Page<CategoryResponseDTO> getCategories(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return categoryRepository.findAll(pageable).map(this::convertToCategoryDto);
+    }
+
+    @Override
+    public CategoryResponseDTO getCategoryById(Long categoryId) throws CustomerException {
+        Category category = categoryRepository.findById(categoryId).orElseThrow(()-> new CustomerException("Mã danh mục không tồn tại"));
+        return convertToCategoryDto(category);
+    }
+
+    @Override
+    public CategoryResponseDTO saveCategory(CategoryRequestDTO categoryRequestDTO) throws CustomerException {
+        Category category = Category.builder()
+                .categoryName(categoryRequestDTO.getCategoryName())
+                .categoryDescription(categoryRequestDTO.getDescription())
+                .build();
+        Category savedCategory = categoryRepository.save(category);
+        return convertToCategoryDto(savedCategory);
+    }
+
+    @Override
+    public CategoryResponseDTO updateCategory(Long categoryId, CategoryUpdateDTO categoryRequestDTO) throws CustomerException {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CustomerException("Category not found"));
+
+        category.setCategoryName(categoryRequestDTO.getCategoryName());
+        category.setCategoryDescription(categoryRequestDTO.getDescription());
+        category.setStatus(categoryRequestDTO.getStatus());
+
+        Category updatedCategory = categoryRepository.save(category);
+        return convertToCategoryDto(updatedCategory);
+    }
+
+    @Override
+    public boolean deleteCategoryById(Long categoryId) throws CustomerException {
+        Category category = categoryRepository.findById(categoryId).orElseThrow(()-> new CustomerException("Không tìm thấy mã danh mục để xóa"));
+        categoryRepository.delete(category);
+        return true;
+    }
+
+    private CategoryResponseDTO convertToCategoryDto(Category category) {
+        return CategoryResponseDTO.builder()
+                .categoryId(category.getCategoryId())
+                .categoryName(category.getCategoryName())
+                .description(category.getCategoryDescription())
+                .status(category.isStatus())
+                .build();
+    }
+
+
+    private ProductReponseDTO convertToProdcutDto(Products product) {
+        return ProductReponseDTO.builder()
+                .productId(product.getProductId())
+                .productName(product.getProductName())
+                .sku(product.getProductSku())
+                .description(product.getProductDescription())
+                .unitPrice(product.getProductPrice())
+                .stockQuantity(product.getProductQuantity())
+                .soldQuantity(product.getSoldQuantity())
+                .image(product.getProductImage())
+                .categoryId(product.getCategory().getCategoryId())
+                .createdAt(java.sql.Timestamp.valueOf(product.getCreatedAt()))
+                .updatedAt(product.getUpdatedAt() != null ? java.sql.Timestamp.valueOf(product.getUpdatedAt()) : null)
                 .build();
     }
 

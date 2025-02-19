@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.ProductReponseDTO;
 import ra.doantotnghiep2025.model.entity.Products;
+import ra.doantotnghiep2025.repository.CategoryRepository;
 import ra.doantotnghiep2025.repository.ProductRepository;
 import ra.doantotnghiep2025.service.ProductService;
 
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
 public class ProductServiceImp implements ProductService {
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Override
     public List<ProductReponseDTO> searchProducts(String keyword) {
