@@ -18,6 +18,9 @@ import ra.doantotnghiep2025.repository.RoleRepository;
 import ra.doantotnghiep2025.repository.UserRepository;
 import ra.doantotnghiep2025.service.AdminService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -103,7 +106,7 @@ public class AdminServiceImp implements AdminService {
 
     @Override
     public List<UserResponseDTO> searchByUserName(String userName) {
-        List<User> user = userRepository.findByFullNameContainingIgnoreCase(userName);
+        List<User> user = userRepository.findByFullnameContainingIgnoreCase(userName);
         return user.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -221,6 +224,13 @@ public class AdminServiceImp implements AdminService {
         Category category = categoryRepository.findById(categoryId).orElseThrow(()-> new CustomerException("Không tìm thấy mã danh mục để xóa"));
         categoryRepository.delete(category);
         return true;
+    }
+
+    @Override
+    public List<User> getNewAccountsThisMonth() {
+        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endOfMonth = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()).atTime(LocalTime.MAX);
+        return userRepository.findByCreatedAtBetween(startOfMonth, endOfMonth);
     }
 
     private CategoryResponseDTO convertToCategoryDto(Category category) {

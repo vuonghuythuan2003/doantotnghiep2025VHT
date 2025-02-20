@@ -6,12 +6,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import ra.doantotnghiep2025.model.entity.Products;
 import ra.doantotnghiep2025.model.entity.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     User findUserByUsername(String username);
     boolean existsByUsername(String username);
     Page<User> findAll(Pageable pageable);
-    List<User> findByFullNameContainingIgnoreCase(String fullName);
+    List<User> findByFullnameContainingIgnoreCase(String fullName);
+    List<User> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
 
 }

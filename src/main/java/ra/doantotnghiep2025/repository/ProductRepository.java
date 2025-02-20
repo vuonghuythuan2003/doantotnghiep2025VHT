@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import ra.doantotnghiep2025.model.entity.Products;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,5 +18,6 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
     List<Products> findByOrderByProductQuantityDesc(Pageable pageable);
     List<Products> findByCategoryCategoryId(Long categoryId, Pageable pageable);
     Optional<Products> findById(Long productId);
+    List<Products> findTop10ByCreatedAtBetweenOrderByLikesDesc(LocalDateTime from, LocalDateTime to, Pageable pageable);
 
 }

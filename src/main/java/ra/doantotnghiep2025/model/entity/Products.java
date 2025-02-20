@@ -44,6 +44,8 @@ public class Products {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private int likes;
+
     @Column(name = "sold_quantity", nullable = false)
     private int soldQuantity = 0;
 

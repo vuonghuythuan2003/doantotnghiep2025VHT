@@ -8,12 +8,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ra.doantotnghiep2025.exception.CustomerException;
+import ra.doantotnghiep2025.model.dto.MostLikedProductDTO;
 import ra.doantotnghiep2025.model.dto.ProductReponseDTO;
 import ra.doantotnghiep2025.model.entity.Products;
 import ra.doantotnghiep2025.repository.CategoryRepository;
 import ra.doantotnghiep2025.repository.ProductRepository;
 import ra.doantotnghiep2025.service.ProductService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,6 +70,19 @@ public class ProductServiceImp implements ProductService {
                 .orElseThrow(() -> new CustomerException("Sản phẩm không tồn tại với ID: " + productId));
         return convertToDto(product);
     }
+
+    @Override
+    public List<MostLikedProductDTO> getMostLikedProducts(LocalDateTime from, LocalDateTime to) {
+        return productRepository.findTop10ByCreatedAtBetweenOrderByLikesDesc(from, to, PageRequest.of(0, 10))
+                .stream()
+                .map(product -> MostLikedProductDTO.builder()
+                        .productId(product.getProductId())
+                        .productName(product.getProductName())
+                        .totalLikes(product.getLikes())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 
     private ProductReponseDTO convertToDto(Products product) {
         return ProductReponseDTO.builder()

@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.model.entity.Role;
+import ra.doantotnghiep2025.model.entity.User;
 
 import java.util.List;
 
@@ -24,5 +25,7 @@ public interface AdminService {
     CategoryResponseDTO saveCategory(CategoryRequestDTO categoryRequestDTO) throws CustomerException;
     CategoryResponseDTO updateCategory(Long categoryId, CategoryUpdateDTO categoryRequestDTO) throws CustomerException;
     boolean deleteCategoryById(Long categoryId) throws CustomerException;
+    List<User> getNewAccountsThisMonth();
+
 }
 
