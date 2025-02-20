@@ -18,5 +18,6 @@ public interface AuthService {
     void deleteAddress(Long addressId, Long userId) throws CustomerException;
     List<AddressResponseDTO> getUserAddresses(Long userId) throws CustomerException;
     AddressResponseDTO getAddressById(Long addressId) throws CustomerException;
+    Long getUserIdByUsername(String username);
 
 }

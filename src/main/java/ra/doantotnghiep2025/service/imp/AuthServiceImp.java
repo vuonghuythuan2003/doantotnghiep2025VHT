@@ -254,7 +254,12 @@ public class AuthServiceImp implements AuthService {
                 .country(address.getCountry())
                 .build();
     }
-
+    @Override
+    public Long getUserIdByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getId();
+    }
 
 
 }

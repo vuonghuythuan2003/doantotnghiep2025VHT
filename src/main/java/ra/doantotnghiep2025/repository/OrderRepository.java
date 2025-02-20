@@ -2,6 +2,7 @@ package ra.doantotnghiep2025.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ra.doantotnghiep2025.model.dto.OrderResponseDTO;
@@ -21,5 +22,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     //OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus orderStatus);
     List<Order> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
+    List<Order> findByUser(User user, Sort sort);
+    Optional<Order> findBySerialNumber(String serialNumber);
+    List<Order> findByStatus(OrderStatus status);
+    Optional<Order> findByOrderIdAndStatus(Long orderId, OrderStatus status);
 
 }

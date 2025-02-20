@@ -97,7 +97,7 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomerException("Người dùng không tồn tại"));
 
-        ShoppingCart cartItem = shoppingCartRepository.findByIdAndUser(cartItemId, user)
+        ShoppingCart cartItem = shoppingCartRepository.findByShoppingCartIdAndUser(cartItemId, user)
                 .orElseThrow(() -> new CustomerException("Sản phẩm không tồn tại trong giỏ hàng"));
 
         shoppingCartRepository.deleteById(cartItemId);

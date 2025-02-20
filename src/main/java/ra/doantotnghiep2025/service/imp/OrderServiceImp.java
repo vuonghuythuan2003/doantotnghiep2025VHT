@@ -3,15 +3,16 @@ package ra.doantotnghiep2025.service.imp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ra.doantotnghiep2025.exception.CustomerException;
-import ra.doantotnghiep2025.model.dto.BestSellerProductDTO;
-import ra.doantotnghiep2025.model.dto.OrderDetailResponseDTO;
-import ra.doantotnghiep2025.model.dto.OrderResponseDTO;
-import ra.doantotnghiep2025.model.dto.TopSpendingCustomerDTO;
+import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.model.entity.Order;
+import ra.doantotnghiep2025.model.entity.OrderDetail;
 import ra.doantotnghiep2025.model.entity.OrderStatus;
+import ra.doantotnghiep2025.model.entity.User;
 import ra.doantotnghiep2025.repository.OrderRepository;
+import ra.doantotnghiep2025.repository.UserRepository;
 import ra.doantotnghiep2025.service.OrderService;
 
 import java.math.BigDecimal;
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
 public class OrderServiceImp implements OrderService {
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public Page<OrderResponseDTO> getAllOrders(Pageable pageable) {
@@ -97,6 +100,84 @@ public class OrderServiceImp implements OrderService {
         return orderRepository.countByCreatedAtBetween(from, to);
     }
 
+    @Override
+    public List<OrderHistoryResponseDTO> getOrderHistory(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Order> orders = orderRepository.findByUser(user, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        return orders.stream().map(this::mapToOrderHistoryResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderResponseDTO getOrderBySerialNumber(String serialNumber) {
+        Order order = orderRepository.findBySerialNumber(serialNumber)
+                .orElseThrow(() -> new RuntimeException("Order not found with serial number: " + serialNumber));
+
+        return OrderResponseDTO.builder()
+                .orderId(order.getOrderId())
+                .serialNumber(order.getSerialNumber())
+                .userFullName(order.getUser().getFullname())
+                .totalPrice(order.getTotalPrice())
+                .status(order.getStatus())
+                .note(order.getNote())
+                .receiveName(order.getReceiveName())
+                .receiveAddress(order.getReceiveAddress())
+                .receivePhone(order.getReceivePhone())
+                .createdAt(order.getCreatedAt())
+                .receivedAt(order.getReceivedAt())
+                .orderDetails(order.getOrderDetails().stream()
+                        .map(detail -> OrderDetailResponseDTO.builder()
+                                .id(detail.getId())
+                                .name(detail.getProduct().getProductName())
+                                .unitPrice(detail.getUnitPrice())
+                                .orderQuantity(detail.getOrderQuantity())
+                                .productId(detail.getProduct().getProductId())
+                                .productName(detail.getProduct().getProductName())
+                                .build())
+                        .collect(Collectors.toSet()))
+
+                .build();
+    }
+
+    @Override
+    public List<OrderHistoryResponseDTO> getOrdersByStatus(OrderStatus status) {
+        List<Order> orders = orderRepository.findByStatus(status);
+        return orders.stream().map(this::mapToOrderHistoryResponseDTO).collect(Collectors.toList());
+    }
+
+    @Override
+
+    public void cancelOrder(Long orderId) throws CustomerException{
+        Order order = orderRepository.findByOrderIdAndStatus(orderId, OrderStatus.WAITING)
+                .orElseThrow(() -> new CustomerException("Order not found or cannot be canceled"));
+
+        order.setStatus(OrderStatus.CANCEL);
+        orderRepository.save(order);
+    }
+
+    private OrderHistoryResponseDTO mapToOrderHistoryResponseDTO(Order order) {
+        return OrderHistoryResponseDTO.builder()
+                .orderId(order.getOrderId())
+                .serialNumber(order.getSerialNumber())
+                .totalPrice(order.getTotalPrice())
+                .status(order.getStatus())
+                .createdAt(order.getCreatedAt())
+                .orderDetails(order.getOrderDetails().stream().map(this::mapToOrderDetailResponseDTO).collect(Collectors.toList()))
+                .build();
+    }
+
+    private OrderDetailResponseDTO mapToOrderDetailResponseDTO(OrderDetail orderDetail) {
+        return OrderDetailResponseDTO.builder()
+                .id(orderDetail.getId()) // ID của chi tiết đơn hàng
+                .name(orderDetail.getProduct().getProductName()) // Tên sản phẩm
+                .unitPrice(orderDetail.getUnitPrice()) // Giá từng đơn vị
+                .orderQuantity(orderDetail.getOrderQuantity()) // Số lượng đặt
+                .productId(orderDetail.getProduct().getProductId()) // ID sản phẩm
+                .productName(orderDetail.getProduct().getProductName()) // Tên sản phẩm
+                .build();
+    }
 
 
     private OrderResponseDTO mapToOrderResponseDTO(Order order) {

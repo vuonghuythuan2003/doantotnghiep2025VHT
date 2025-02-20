@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface ShoppingCartRepository extends JpaRepository<ShoppingCart, Long> {
     List<ShoppingCart> findByUser(User user);
     Optional<ShoppingCart> findByUserAndProduct(User user, Products product);
-    Optional<ShoppingCart> findByIdAndUser(Long cartItemId, User user);
+    Optional<ShoppingCart> findByShoppingCartIdAndUser(Long shoppingCartId, User user);  // Đổi 'id' thành 'shoppingCartId'
     void deleteAllByUser(User user);
 
 }

@@ -2,10 +2,14 @@ package ra.doantotnghiep2025.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
+import ra.doantotnghiep2025.model.entity.OrderStatus;
 import ra.doantotnghiep2025.service.AuthService;
+import ra.doantotnghiep2025.service.OrderService;
 
 import java.util.List;
 
@@ -14,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private final AuthService userService;
+    private final OrderService orderService;
 
     @GetMapping("/account")
     public ResponseEntity<UserResponseDTO> getUserAccount(@RequestParam Long userId) {
@@ -56,4 +61,24 @@ public class UserController {
         AddressResponseDTO address = userService.getAddressById(addressId);
         return ResponseEntity.ok(address);
     }
+    @GetMapping("/history")
+    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrderHistory(@AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.getUserIdByUsername(userDetails.getUsername());
+        return ResponseEntity.ok(orderService.getOrderHistory(userId));
+    }
+    @GetMapping("/history/{serialNumber}")
+    public ResponseEntity<OrderResponseDTO> getOrderBySerialNumber(@PathVariable String serialNumber) {
+        return ResponseEntity.ok(orderService.getOrderBySerialNumber(serialNumber));
+    }
+    @GetMapping("/history/{orderStatus}")
+    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrdersByStatus(@PathVariable OrderStatus orderStatus) {
+        List<OrderHistoryResponseDTO> orders = orderService.getOrdersByStatus(orderStatus);
+        return ResponseEntity.ok(orders);
+    }
+    @PutMapping("/history/{orderId}/cancel")
+    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId) throws CustomerException{
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.ok("Order has been canceled successfully.");
+    }
+
 }
