@@ -57,4 +57,11 @@ public class Products {
     public void setUpdatedAt() {
         this.updatedAt = LocalDateTime.now();
     }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+
 }

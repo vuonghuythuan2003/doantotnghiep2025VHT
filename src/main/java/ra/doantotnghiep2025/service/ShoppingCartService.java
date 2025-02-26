@@ -14,6 +14,6 @@ public interface ShoppingCartService {
     ShoppingCartResponseDTO updateCartItem(Long cartItemId, int quantity) throws CustomerException;
     void removeCartItem(Long userId, Long cartItemId) throws CustomerException;
     void clearCart(Long userId) throws CustomerException;
-    OrderResponseDTO checkout(Long userId);
+    OrderResponseDTO checkout(Long userId, String receiveAddress, String receiveName, String receivePhone, String note);
 
 }

@@ -23,5 +23,5 @@ public class Category {
     private String categoryDescription;
 
     @Column(name = "status", nullable = false, columnDefinition = "bit DEFAULT true")
-    private boolean status;
+    private boolean status = true;
 }

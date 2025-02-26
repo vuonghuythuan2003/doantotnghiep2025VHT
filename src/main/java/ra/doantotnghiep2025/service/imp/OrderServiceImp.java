@@ -17,6 +17,7 @@ import ra.doantotnghiep2025.service.OrderService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -107,8 +108,11 @@ public class OrderServiceImp implements OrderService {
 
         List<Order> orders = orderRepository.findByUser(user, Sort.by(Sort.Direction.DESC, "createdAt"));
 
+        System.out.println("Orders found for userId " + userId + ": " + orders.size()); // Debug
+
         return orders.stream().map(this::mapToOrderHistoryResponseDTO).collect(Collectors.toList());
     }
+
 
     @Override
     public OrderResponseDTO getOrderBySerialNumber(String serialNumber) {
@@ -179,7 +183,6 @@ public class OrderServiceImp implements OrderService {
                 .build();
     }
 
-
     private OrderResponseDTO mapToOrderResponseDTO(Order order) {
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
@@ -187,13 +190,28 @@ public class OrderServiceImp implements OrderService {
                 .userFullName(order.getUser().getFullname())
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
-                .note(order.getNote())
+                .note(order.getNote() != null ? order.getNote() : "")  // Tránh null
                 .receiveName(order.getReceiveName())
                 .receiveAddress(order.getReceiveAddress())
-                .receivePhone(order.getReceivePhone())
+                .receivePhone(order.getReceivePhone().trim())  // Loại bỏ xuống dòng
                 .createdAt(order.getCreatedAt())
                 .receivedAt(order.getReceivedAt())
+                .orderDetails(order.getOrderDetails() != null ?
+                        order.getOrderDetails().stream()
+                                .map(detail -> new OrderDetailResponseDTO(
+                                        detail.getId(),
+                                        detail.getProduct().getProductName(),
+                                        detail.getUnitPrice(),
+                                        detail.getOrderQuantity(),
+                                        detail.getProduct().getProductId(),
+                                        detail.getProduct().getProductName()
+                                ))
+                                .collect(Collectors.toSet())
+                        : Collections.emptySet())
                 .build();
     }
+
+
+
 
 }

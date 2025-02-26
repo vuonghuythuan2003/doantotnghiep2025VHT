@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
     Page<Products> findAll(Pageable pageable);
     List<Products> findTop10ByOrderBySoldQuantityDesc();
     List<Products> findTop10ByOrderByCreatedAtDesc();
-    List<Products> findByOrderByProductQuantityDesc(Pageable pageable);
+    List<Products> findByOrderBySoldQuantityDesc(Pageable pageable);
     List<Products> findByCategoryCategoryId(Long categoryId, Pageable pageable);
     Optional<Products> findById(Long productId);
     List<Products> findTop10ByCreatedAtBetweenOrderByLikesDesc(LocalDateTime from, LocalDateTime to, Pageable pageable);

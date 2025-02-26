@@ -201,6 +201,7 @@ public class AdminServiceImp implements AdminService {
         Category category = Category.builder()
                 .categoryName(categoryRequestDTO.getCategoryName())
                 .categoryDescription(categoryRequestDTO.getDescription())
+                .status(true)
                 .build();
         Category savedCategory = categoryRepository.save(category);
         return convertToCategoryDto(savedCategory);

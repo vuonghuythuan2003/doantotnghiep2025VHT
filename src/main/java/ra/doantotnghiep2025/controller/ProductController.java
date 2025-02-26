@@ -40,18 +40,18 @@ public class ProductController {
     @GetMapping("/featured-products")
     public ResponseEntity<List<ProductReponseDTO>> getFeaturedProducts() {
         List<ProductReponseDTO> featuredProducts = productService.getFeaturedProducts();
-        return ResponseEntity.ok(featuredProducts);
+        return ResponseEntity.ok(featuredProducts); // lấy 10 số lượng sản phẩm có tỷ lệ bán cao nhất
     }
     @GetMapping("/new-products")
     public ResponseEntity<List<ProductReponseDTO>> getNewProducts() {
         List<ProductReponseDTO> newProducts = productService.getNewProducts();
-        return ResponseEntity.ok(newProducts);
+        return ResponseEntity.ok(newProducts); // lấy theo 10 sản phẩm có thời gian tạo gần nhất
     }
     @GetMapping("/best-seller-products")
     public ResponseEntity<List<ProductReponseDTO>> getBestSellerProducts(
             @RequestParam(defaultValue = "10") int limit) {
         List<ProductReponseDTO> products = productService.getBestSellerProducts(limit);
-        return ResponseEntity.ok(products);
+        return ResponseEntity.ok(products); // dựa trên số lượng đã bán giảm dần
     }
     @GetMapping("/categories/{categoryId}")
     public ResponseEntity<List<ProductReponseDTO>> getProductsByCategory(

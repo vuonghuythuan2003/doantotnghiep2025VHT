@@ -54,7 +54,7 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     public List<ProductReponseDTO> getBestSellerProducts(int limit) {
-        List<Products> products = productRepository.findByOrderByProductQuantityDesc(PageRequest.of(0, limit));
+        List<Products> products = productRepository.findByOrderBySoldQuantityDesc(PageRequest.of(0, limit));
         return products.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 

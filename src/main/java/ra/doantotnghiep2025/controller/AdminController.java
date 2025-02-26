@@ -135,11 +135,13 @@
             Page<OrderResponseDTO> orders = orderService.getAllOrders(pageable);
             return ResponseEntity.ok(orders);
         }
-        @GetMapping("/orders/{orderStatus}")
-        public ResponseEntity<Page<OrderResponseDTO>> getOrdersByStatus(@PathVariable OrderStatus orderStatus, Pageable pageable) {
+        @GetMapping("/orders/status/{orderStatus}")
+        public ResponseEntity<Page<OrderResponseDTO>> getOrdersByStatus(
+                @PathVariable OrderStatus orderStatus, Pageable pageable) {
             Page<OrderResponseDTO> orders = orderService.getOrdersByStatus(orderStatus, pageable);
             return ResponseEntity.ok(orders);
         }
+
         @GetMapping("/orders/{orderId}")
         public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Long orderId) throws CustomerException{
             OrderResponseDTO orderResponse = orderService.getOrderById(orderId);

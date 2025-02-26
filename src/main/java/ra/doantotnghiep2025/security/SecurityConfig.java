@@ -40,45 +40,10 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> {
                     // API dành cho ADMIN
-                    auth.requestMatchers(
-                            "/api/v1/admin/users",
-                            "/api/v1/admin/users/{userId}/role/{roleId}",
-                            "/api/v1/admin/users/{userId}",
-                            "/api/v1/admin/roles",
-                            "/api/v1/admin/search",
-                            "/api/v1/admin/products",
-                            "/api/v1/admin/products/{productId}",
-                            "/api/v1/admin/categories",
-                            "/api/v1/admin/categories/{categoryId}",
-                            "/api/v1/admin/orders",
-                            "/api/v1/admin/orders/{orderId}",
-                            "/api/v1/admin/orders/{orderId}/status",
-                            "/api/v1/admin/sales-revenue-over-time",
-                            "/api/v1/admin/reports/best-seller-products",
-                            "/api/v1/admin/reports/revenue-by-category",
-                            "/api/v1/admin/reports/top-spending-customers",
-                            "/api/v1/admin/reports/new-accounts-this-month",
-                            "/api/v1/admin/reports/invoices-over-time"
-                    ).hasAuthority("ADMIN");
-
+                    auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN");
                     // API dành cho USER
-                    auth.requestMatchers(
-                            "/api/v1/user/cart/list",
-                            "/api/v1/user/cart/add",
-                            "/api/v1/user/cart/items/{cartItemId}",
-                            "/api/v1/user/cart/clear",
-                            "/api/v1/user/cart/checkout",
-                            "/api/v1/user/account",
-                            "/api/v1/user/account/change-password",
-                            "/api/v1/user/account/addresses",
-                            "/api/v1/user/account/addresses/{addressId}",
-                            "/api/v1/user/history",
-                            "/api/v1/user/history/{serialNumber}",
-                            "/api/v1/user/history/{orderStatus}",
-                            "/api/v1/user/history/{orderId}/cancel",
-                            "/api/v1/user/wish-list",
-                            "/api/v1/user/wish-list/{wishListId}"
-                    ).hasAuthority("USER");
+                    auth.requestMatchers("/api/v1/user/**").hasAuthority("USER");
+
 
                     // API công khai (không cần đăng nhập)
                     auth.requestMatchers(

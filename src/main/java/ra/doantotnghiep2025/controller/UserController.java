@@ -61,15 +61,19 @@ public class UserController {
         AddressResponseDTO address = userService.getAddressById(addressId);
         return ResponseEntity.ok(address);
     }
-    @GetMapping("/history")
-    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrderHistory(@AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = userService.getUserIdByUsername(userDetails.getUsername());
+    @GetMapping("/history/getAll")
+    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrderHistory(@RequestParam Long userId) {
+        System.out.println("Fetching order history for userId: " + userId); // Debug
+
         return ResponseEntity.ok(orderService.getOrderHistory(userId));
     }
-    @GetMapping("/history/{serialNumber}")
-    public ResponseEntity<OrderResponseDTO> getOrderBySerialNumber(@PathVariable String serialNumber) {
+
+
+    @GetMapping("/history")
+    public ResponseEntity<OrderResponseDTO> getOrderBySerialNumber(@RequestParam String serialNumber) {
         return ResponseEntity.ok(orderService.getOrderBySerialNumber(serialNumber));
     }
+
     @GetMapping("/history/{orderStatus}")
     public ResponseEntity<List<OrderHistoryResponseDTO>> getOrdersByStatus(@PathVariable OrderStatus orderStatus) {
         List<OrderHistoryResponseDTO> orders = orderService.getOrdersByStatus(orderStatus);

@@ -258,8 +258,12 @@ public class AuthServiceImp implements AuthService {
     public Long getUserIdByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        System.out.println("Found user: " + user.getUsername() + ", ID: " + user.getId()); // Debug
+
         return user.getId();
     }
+
 
 
 }

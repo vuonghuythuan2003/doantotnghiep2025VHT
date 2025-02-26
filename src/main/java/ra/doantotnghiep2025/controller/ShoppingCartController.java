@@ -56,10 +56,17 @@ public class ShoppingCartController {
         }
     }
     @PostMapping("/checkout")
-    public ResponseEntity<OrderResponseDTO> checkout(@RequestParam Long userId) {
-        OrderResponseDTO order = shoppingCartService.checkout(userId);
+    public ResponseEntity<OrderResponseDTO> checkout(
+            @RequestParam Long userId,
+            @RequestParam String receiveAddress,
+            @RequestParam String receiveName,
+            @RequestParam String receivePhone,
+            @RequestParam(required = false) String note) {
+
+        OrderResponseDTO order = shoppingCartService.checkout(userId, receiveAddress, receiveName, receivePhone, note);
         return ResponseEntity.ok(order);
     }
+
 
 
 }
