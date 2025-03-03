@@ -26,14 +26,14 @@ public class WishListServiceImp implements WishListService {
     @Override
     public void addToWishList(Long userId, WishListRequestDTO request) throws CustomerException{
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomerException("User not found"));
+                .orElseThrow(() -> new CustomerException("Không tìm thấy người dùng"));
 
         Products product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new CustomerException("Product not found"));
+                .orElseThrow(() -> new CustomerException("Không tìm thấy sản phẩm"));
 
         boolean exists = wishListRepository.findByUserAndProduct(user, product).isPresent();
         if (exists) {
-            throw new CustomerException("Product is already in wishlist");
+            throw new CustomerException("Sản phẩm đã có trong danh sách yêu thích");
         }
 
         WishList wishList = WishList.builder()
@@ -64,7 +64,7 @@ public class WishListServiceImp implements WishListService {
     @Override
     public void removeFromWishList(Long wishListId) throws CustomerException{
         WishList wishList = wishListRepository.findById(wishListId)
-                .orElseThrow(() -> new CustomerException("WishList item not found"));
+                .orElseThrow(() -> new CustomerException("Không tìm thấy mục WishList"));
 
         wishListRepository.delete(wishList);
     }

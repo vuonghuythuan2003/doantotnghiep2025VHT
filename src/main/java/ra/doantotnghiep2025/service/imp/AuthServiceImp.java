@@ -6,23 +6,24 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
-import ra.doantotnghiep2025.model.entity.Address;
-import ra.doantotnghiep2025.model.entity.Role;
-import ra.doantotnghiep2025.model.entity.RoleType;
-import ra.doantotnghiep2025.model.entity.User;
+import ra.doantotnghiep2025.model.entity.*;
 import ra.doantotnghiep2025.repository.AddressRepository;
+import ra.doantotnghiep2025.repository.PasswordResetTokenRepository;
 import ra.doantotnghiep2025.repository.RoleRepository;
 import ra.doantotnghiep2025.repository.UserRepository;
 import ra.doantotnghiep2025.security.UserPrinciple;
 import ra.doantotnghiep2025.security.jwt.JwtProvider;
 import ra.doantotnghiep2025.service.AuthService;
+import ra.doantotnghiep2025.service.EmailService;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,9 +41,16 @@ public class AuthServiceImp implements AuthService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private AddressRepository addressRepository;
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Override
     public UserLoginResponse login(UserLoginRequestDto userLoginRequestDTO) {
+        System.out.println("Đăng nhập với username: " + userLoginRequestDTO.getUsername());
+        System.out.println("Mật khẩu gửi lên: " + userLoginRequestDTO.getPassword());
+
         Authentication authentication = authenticationProvider.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         userLoginRequestDTO.getUsername(),
@@ -257,13 +265,57 @@ public class AuthServiceImp implements AuthService {
     @Override
     public Long getUserIdByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-        System.out.println("Found user: " + user.getUsername() + ", ID: " + user.getId()); // Debug
+        System.out.println("Đã tìm thấy người dùng: " + user.getUsername() + ", ID: " + user.getId()); // Debug
 
         return user.getId();
     }
 
+    @Override
+    public void forgotPassword(ForgotPasswordRequestDTO request) throws CustomerException {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CustomerException("Không tìm thấy người dùng với email: " + request.getEmail()));
+
+        String token = UUID.randomUUID().toString();
+        // Sử dụng Builder để tạo đối tượng
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .token(token)
+                .user(user)
+                .expiryDate(LocalDateTime.now().plusHours(1))
+                .build();
+        passwordResetTokenRepository.save(resetToken);
+
+        String subject = "Khôi phục mật khẩu";
+        String text = "Chào " + user.getFullname() + ",\n\n" +
+                "Bạn đã yêu cầu khôi phục mật khẩu. Vui lòng sử dụng mã xác nhận dưới đây để đặt lại mật khẩu:\n" +
+                "Mã xác nhận: " + token + "\n" +
+                "Mã này sẽ hết hạn sau 1 giờ.\n\n" +
+                "Trân trọng,\nCửa hàng đồng hồ";
+        emailService.sendSimpleEmail(user.getEmail(), subject, text);
+    }
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequestDTO request) throws CustomerException {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
+                .orElseThrow(() -> new CustomerException("Mã xác nhận không hợp lệ"));
+
+        if (resetToken.isExpired()) {
+            throw new CustomerException("Mật khẩu xác nhận đã hết hạn");
+        }
+
+        User user = resetToken.getUser();
+        String newPassword = request.getNewPassword();
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        System.out.println("Đặt lại mật khẩu cho user: " + user.getUsername());
+        System.out.println("Mật khẩu mới trước khi mã hóa: " + newPassword);
+        System.out.println("Mật khẩu mới sau khi mã hóa: " + encodedPassword);
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
+        System.out.println("Mật khẩu đã được lưu vào cơ sở dữ liệu cho người dùng: " + user.getUsername());
+
+        passwordResetTokenRepository.delete(resetToken);
+    }
 
 
 }

@@ -56,7 +56,9 @@ public class SecurityConfig {
                             "/api/v1/products/new-products",
                             "/api/v1/products/best-seller-products",
                             "/api/v1/products/categories/{categoryId}",
-                            "/api/v1/products/{productId}"
+                            "/api/v1/products/{productId}",
+                            "/api/v1/account/forgot-password",
+                            "/api/v1/account/reset-password"
                     ).permitAll();
 
                     auth.anyRequest().authenticated();

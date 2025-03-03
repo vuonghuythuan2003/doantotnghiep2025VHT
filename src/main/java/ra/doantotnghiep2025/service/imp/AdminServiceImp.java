@@ -210,7 +210,7 @@ public class AdminServiceImp implements AdminService {
     @Override
     public CategoryResponseDTO updateCategory(Long categoryId, CategoryUpdateDTO categoryRequestDTO) throws CustomerException {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CustomerException("Category not found"));
+                .orElseThrow(() -> new CustomerException("Không tìm thấy danh mục"));
 
         category.setCategoryName(categoryRequestDTO.getCategoryName());
         category.setCategoryDescription(categoryRequestDTO.getDescription());

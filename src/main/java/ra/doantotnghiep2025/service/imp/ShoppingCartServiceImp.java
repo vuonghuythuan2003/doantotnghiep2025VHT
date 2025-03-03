@@ -39,7 +39,7 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
 
     @Override
     public List<ShoppingCartResponseDTO> getShoppingCartItems(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         return shoppingCartRepository.findByUser(user).stream().map(cart -> ShoppingCartResponseDTO.builder()
                 .shoppingCartId(cart.getShoppingCartId())
                 .productId(cart.getProduct().getProductId())

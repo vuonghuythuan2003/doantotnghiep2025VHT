@@ -1,5 +1,6 @@
 package ra.doantotnghiep2025.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,15 @@ public class AuthController {
     public ResponseEntity<?> login(@ModelAttribute UserLoginRequestDto requestDTO) throws CustomerException{
         UserLoginResponse responseDTO = authService.login(requestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request){
+        String token = request.getHeader("Authorization");
+        if(token != null & token.startsWith("Bearer ")){
+            token = token.substring(7);
+            tokenService.invalidateToken(token);
+        }
+        return ResponseEntity.ok("Đăng xuất");
     }
 
 }

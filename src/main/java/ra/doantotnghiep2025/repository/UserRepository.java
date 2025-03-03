@@ -17,5 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByFullnameContainingIgnoreCase(String fullName);
     List<User> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
 
 }

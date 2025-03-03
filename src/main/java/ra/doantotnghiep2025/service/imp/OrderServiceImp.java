@@ -104,11 +104,11 @@ public class OrderServiceImp implements OrderService {
     @Override
     public List<OrderHistoryResponseDTO> getOrderHistory(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         List<Order> orders = orderRepository.findByUser(user, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        System.out.println("Orders found for userId " + userId + ": " + orders.size()); // Debug
+        System.out.println("Đã tìm thấy đơn hàng cho userId " + userId + ": " + orders.size());
 
         return orders.stream().map(this::mapToOrderHistoryResponseDTO).collect(Collectors.toList());
     }
