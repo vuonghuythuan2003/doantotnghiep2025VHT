@@ -204,7 +204,7 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .serialNumber(order.getSerialNumber())
-                .userFullName(user.getFullname())  // Truyền thông tin user đầy đủ
+                .userId(order.getUser().getId())
                 .createdAt(order.getCreatedAt())
                 .receivedAt(order.getReceivedAt())
                 .status(order.getStatus())
@@ -212,8 +212,7 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
                 .receiveAddress(order.getReceiveAddress())
                 .receiveName(order.getReceiveName())
                 .receivePhone(order.getReceivePhone())
-                .note(order.getNote())  // Ghi chú từ người dùng
-                .orderDetails(orderDetailList)  // Thêm danh sách order details
+                .note(order.getNote())
                 .build();
     }
 

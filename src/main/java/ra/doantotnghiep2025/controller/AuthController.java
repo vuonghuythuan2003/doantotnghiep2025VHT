@@ -1,14 +1,18 @@
 package ra.doantotnghiep2025.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.service.AuthService;
 import ra.doantotnghiep2025.service.TokenService;
+
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -19,13 +23,14 @@ public class AuthController {
     private TokenService tokenService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<?> register(@ModelAttribute UserRegisterRequestDTO requestDTO) throws CustomerException {
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequestDTO requestDTO, BindingResult bindingResult ) throws CustomerException {
         UserRegisterResponseDTO responseDTO = authService.register(requestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<?> login(@ModelAttribute UserLoginRequestDto requestDTO) throws CustomerException{
+    public ResponseEntity<?> login(@RequestBody UserLoginRequestDto requestDTO) throws CustomerException{
+
         UserLoginResponse responseDTO = authService.login(requestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }

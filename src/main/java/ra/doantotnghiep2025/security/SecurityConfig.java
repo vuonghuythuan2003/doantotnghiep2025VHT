@@ -13,9 +13,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 import ra.doantotnghiep2025.security.jwt.CustomAccessDeniedHandler;
 import ra.doantotnghiep2025.security.jwt.JwtAuthTokenFilter;
 import ra.doantotnghiep2025.security.jwt.JwtEntryPoint;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -37,13 +40,24 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://localhost:5173/"));
+                    config.setAllowedMethods(List.of("*"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setExposedHeaders(List.of("*"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> {
                     // API dành cho ADMIN
-                    auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN");
+
+                    //auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN");
+
+                    auth.requestMatchers("/api/v1/admin/**").permitAll();
                     // API dành cho USER
                     auth.requestMatchers("/api/v1/user/**").hasAuthority("USER");
-
 
                     // API công khai (không cần đăng nhập)
                     auth.requestMatchers(

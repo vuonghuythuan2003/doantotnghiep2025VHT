@@ -18,5 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
+    boolean existsByPhone(String phone);
 
 }

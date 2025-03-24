@@ -14,7 +14,7 @@ import java.util.Set;
 public class OrderResponseDTO {
     private Long orderId;
     private String serialNumber;
-    private String userFullName;
+    private Long userId;
     private BigDecimal totalPrice;
     private OrderStatus status;
     private String note;
@@ -23,5 +23,4 @@ public class OrderResponseDTO {
     private String receivePhone;
     private LocalDateTime createdAt;
     private LocalDateTime receivedAt;
-    private Set<OrderDetailResponseDTO> orderDetails;
 }

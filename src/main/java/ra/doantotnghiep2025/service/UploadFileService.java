@@ -15,21 +15,30 @@ import java.util.Map;
 public class UploadFileService {
     private final Cloudinary cloudinary;
     public String uploadFile(MultipartFile file) {
-        // lay file goc
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename !=null && originalFilename.contains(".")) {
-            originalFilename = originalFilename.substring(0,originalFilename.lastIndexOf("."));
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("File không được để trống!");
         }
-        //Them ten file vao tham so upload
-        Map uploadParams = ObjectUtils.asMap(
-                "public_id",originalFilename
-        );
-        // up len cloudinary
+
+        String contentType = file.getContentType();
+        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+            throw new RuntimeException("Chỉ hỗ trợ file JPG hoặc PNG!");
+        }
+
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new RuntimeException("File vượt quá kích thước tối đa (5MB)!");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && originalFilename.contains(".")) {
+            originalFilename = originalFilename.substring(0, originalFilename.lastIndexOf("."));
+        }
+
+        Map uploadParams = ObjectUtils.asMap("public_id", originalFilename);
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),uploadParams);
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), uploadParams);
             return uploadResult.get("url").toString();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Lỗi upload file: " + e.getMessage());
         }
     }
 }

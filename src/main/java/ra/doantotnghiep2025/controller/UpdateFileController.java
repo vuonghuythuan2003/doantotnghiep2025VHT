@@ -14,7 +14,11 @@ public class UpdateFileController {
     private UploadFileService uploadFileService;
     @PostMapping("")
     public ResponseEntity<String> upload(@RequestParam MultipartFile file) {
-        String fileName = uploadFileService.uploadFile(file);
-        return new ResponseEntity<>(fileName, HttpStatus.CREATED);
+        try {
+            String fileName = uploadFileService.uploadFile(file);
+            return new ResponseEntity<>(fileName, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lỗi upload file: " + e.getMessage());
+        }
     }
 }

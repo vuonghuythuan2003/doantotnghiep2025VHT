@@ -48,17 +48,53 @@ public class OrderServiceImp implements OrderService {
 
         return mapToOrderResponseDTO(order);
     }
+    @Override
+    public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus orderStatus) throws CustomerException {
+        if (orderId == null) {
+            throw new IllegalArgumentException("Order ID cannot be null");
+        }
+        if (orderStatus == null) {
+            throw new IllegalArgumentException("Order status cannot be null");
+        }
 
-    public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus orderStatus) throws CustomerException{
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomerException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        validateOrderStatusTransition(order.getStatus(), orderStatus);
 
         order.setStatus(orderStatus);
         orderRepository.save(order);
 
         return mapToOrderResponseDTO(order);
     }
+    private void validateOrderStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) throws CustomerException {
+        if (currentStatus == null || newStatus == null) {
+            throw new CustomerException("Trạng thái hiện tại hoặc trạng thái mới không hợp lệ");
+        }
 
+        switch (currentStatus) {
+            case WAITING:
+                if (newStatus != OrderStatus.CONFIRM && newStatus != OrderStatus.CANCEL) {
+                    throw new CustomerException("Đơn hàng ở trạng thái WAITING chỉ có thể chuyển sang CONFIRM hoặc CANCEL");
+                }
+                break;
+            case CONFIRM:
+                if (newStatus != OrderStatus.DELIVERY && newStatus != OrderStatus.CANCEL) {
+                    throw new CustomerException("Đơn hàng ở trạng thái CONFIRM chỉ có thể chuyển sang DELIVERY hoặc CANCEL");
+                }
+                break;
+            case DELIVERY:
+                if (newStatus != OrderStatus.SUCCESS && newStatus != OrderStatus.CANCEL) {
+                    throw new CustomerException("Đơn hàng ở trạng thái DELIVERY chỉ có thể chuyển sang SUCCESS hoặc CANCEL");
+                }
+                break;
+            case SUCCESS:
+            case CANCEL:
+                throw new CustomerException("Đơn hàng đã ở trạng thái " + currentStatus + ", không thể thay đổi trạng thái");
+            default:
+                throw new CustomerException("Trạng thái hiện tại không hợp lệ: " + currentStatus);
+        }
+    }
     @Override
     public BigDecimal getSalesRevenueOverTime(LocalDateTime from, LocalDateTime to) {
         return orderRepository.findByCreatedAtBetween(from, to)
@@ -122,7 +158,6 @@ public class OrderServiceImp implements OrderService {
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .serialNumber(order.getSerialNumber())
-                .userFullName(order.getUser().getFullname())
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
                 .note(order.getNote())
@@ -131,17 +166,6 @@ public class OrderServiceImp implements OrderService {
                 .receivePhone(order.getReceivePhone())
                 .createdAt(order.getCreatedAt())
                 .receivedAt(order.getReceivedAt())
-                .orderDetails(order.getOrderDetails().stream()
-                        .map(detail -> OrderDetailResponseDTO.builder()
-                                .id(detail.getId())
-                                .name(detail.getProduct().getProductName())
-                                .unitPrice(detail.getUnitPrice())
-                                .orderQuantity(detail.getOrderQuantity())
-                                .productId(detail.getProduct().getProductId())
-                                .productName(detail.getProduct().getProductName())
-                                .build())
-                        .collect(Collectors.toSet()))
-
                 .build();
     }
 
@@ -187,28 +211,14 @@ public class OrderServiceImp implements OrderService {
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .serialNumber(order.getSerialNumber())
-                .userFullName(order.getUser().getFullname())
-                .totalPrice(order.getTotalPrice())
+                .userId(order.getUser() != null ? order.getUser().getId() : null)                .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
                 .note(order.getNote() != null ? order.getNote() : "")  // Tránh null
                 .receiveName(order.getReceiveName())
                 .receiveAddress(order.getReceiveAddress())
                 .receivePhone(order.getReceivePhone().trim())  // Loại bỏ xuống dòng
                 .createdAt(order.getCreatedAt())
-                .receivedAt(order.getReceivedAt())
-                .orderDetails(order.getOrderDetails() != null ?
-                        order.getOrderDetails().stream()
-                                .map(detail -> new OrderDetailResponseDTO(
-                                        detail.getId(),
-                                        detail.getProduct().getProductName(),
-                                        detail.getUnitPrice(),
-                                        detail.getOrderQuantity(),
-                                        detail.getProduct().getProductId(),
-                                        detail.getProduct().getProductName()
-                                ))
-                                .collect(Collectors.toSet())
-                        : Collections.emptySet())
-                .build();
+                .receivedAt(order.getReceivedAt()).build();
     }
 
 

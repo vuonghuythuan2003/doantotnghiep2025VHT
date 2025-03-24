@@ -1,6 +1,7 @@
 package ra.doantotnghiep2025.model.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 import ra.doantotnghiep2025.validator.ProductNameUnique;
 
 @AllArgsConstructor
@@ -11,7 +12,6 @@ import ra.doantotnghiep2025.validator.ProductNameUnique;
 public class ProductUpdateDTO {
     @NotBlank(message = "Tên sản phẩm không được để trống")
     @Size(max = 100, message = "Tên sản phẩm không được vượt quá 100 ký tự")
-    @ProductNameUnique(message = "Tên sản phẩm không được trùng lặp")
     private String productName;
 
     @NotBlank(message = "SKU không được để trống")
@@ -31,7 +31,7 @@ public class ProductUpdateDTO {
     @Min(value = 0, message = "Số lượng bán không được âm")
     private Integer soldQuantity;
 
-    private String image;
+    private MultipartFile image;
 
     @NotNull(message = "Mã danh mục không được để trống")
     private Long categoryId;

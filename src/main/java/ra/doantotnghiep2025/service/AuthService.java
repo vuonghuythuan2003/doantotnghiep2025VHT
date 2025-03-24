@@ -1,6 +1,5 @@
 package ra.doantotnghiep2025.service;
 
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ra.doantotnghiep2025.exception.CustomerException;
@@ -19,7 +18,8 @@ public interface AuthService {
     List<AddressResponseDTO> getUserAddresses(Long userId) throws CustomerException;
     AddressResponseDTO getAddressById(Long addressId) throws CustomerException;
     Long getUserIdByUsername(String username);
-    //Khôi phục mật khẩu
     void forgotPassword(ForgotPasswordRequestDTO request) throws CustomerException;
     void resetPassword(ResetPasswordRequestDTO request) throws CustomerException;
+
+
 }

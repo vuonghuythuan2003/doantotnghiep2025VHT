@@ -1,6 +1,8 @@
 package ra.doantotnghiep2025.service.imp;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -68,17 +70,32 @@ public class AuthServiceImp implements AuthService {
 
     @Override
     public UserRegisterResponseDTO register(UserRegisterRequestDTO userRegisterDTO) throws CustomerException {
-        if (userRegisterDTO.getUsername() == null || userRegisterDTO.getPassword() == null) {
-            throw new CustomerException("Tên đăng nhập và mật khẩu không được để trống");
+        if (userRegisterDTO.getUsername() == null || userRegisterDTO.getUsername().trim().isEmpty()) {
+            throw new CustomerException("Tên đăng nhập không được để trống");
+        }
+        if (userRegisterDTO.getPassword() == null || userRegisterDTO.getPassword().trim().isEmpty()) {
+            throw new CustomerException("Mật khẩu không được để trống");
+        }
+        if (userRegisterDTO.getEmail() == null || userRegisterDTO.getEmail().trim().isEmpty()) {
+            throw new CustomerException("Email không được để trống");
+        }
+        if (userRegisterDTO.getPhoneNumber() == null || userRegisterDTO.getPhoneNumber().trim().isEmpty()) {
+            throw new CustomerException("Số điện thoại không được để trống");
         }
 
         if (userRepository.existsByUsername(userRegisterDTO.getUsername())) {
             throw new CustomerException("Tên người dùng đã tồn tại");
         }
+        if (userRepository.findByEmail(userRegisterDTO.getEmail()).isPresent()) {
+            throw new CustomerException("Email đã tồn tại: " + userRegisterDTO.getEmail());
+        }
+        if (userRepository.existsByPhone(userRegisterDTO.getPhoneNumber())) {
+            throw new CustomerException("Số điện thoại đã tồn tại");
+        }
 
         Role role = roleRepository.findRoleByRoleName(RoleType.USER);
         if (role == null) {
-            throw new CustomerException("Không tìm thấy vai trò NGƯỜI DÙNG trong cơ sở dữ liệu");
+            throw new CustomerException("Không tìm thấy vai trò người dùng trong cơ sở dữ liệu");
         }
 
         Set<Role> roles = new HashSet<>();
@@ -93,7 +110,7 @@ public class AuthServiceImp implements AuthService {
                 .roles(roles)
                 .isDeleted(false)
                 .email(userRegisterDTO.getEmail())
-                .fullname(userRegisterDTO.getFullName())
+                .fullname(userRegisterDTO.getFullName() != null ? userRegisterDTO.getFullName() : "Chưa cập nhật")
                 .phone(userRegisterDTO.getPhoneNumber())
                 .address(userRegisterDTO.getAddress() != null ? userRegisterDTO.getAddress() : "Chưa cập nhật")
                 .build();
@@ -130,10 +147,21 @@ public class AuthServiceImp implements AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
-        if (requestDTO.getFullname() != null) user.setFullname(requestDTO.getFullname());
-        if (requestDTO.getPhone() != null) user.setPhone(requestDTO.getPhone());
-        if (requestDTO.getAvatar() != null) user.setAvatar(requestDTO.getAvatar());
-        if (requestDTO.getAddress() != null) user.setAddress(requestDTO.getAddress());
+        if (requestDTO.getFullname() != null && !requestDTO.getFullname().trim().isEmpty()) {
+            user.setFullname(requestDTO.getFullname());
+        }
+        if (requestDTO.getPhone() != null && !requestDTO.getPhone().trim().isEmpty()) {
+            if (userRepository.existsByPhone(requestDTO.getPhone()) && !requestDTO.getPhone().equals(user.getPhone())) {
+                throw new RuntimeException("Số điện thoại đã tồn tại");
+            }
+            user.setPhone(requestDTO.getPhone());
+        }
+        if (requestDTO.getAvatar() != null) {
+            user.setAvatar(requestDTO.getAvatar());
+        }
+        if (requestDTO.getAddress() != null && !requestDTO.getAddress().trim().isEmpty()) {
+            user.setAddress(requestDTO.getAddress());
+        }
 
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
@@ -154,6 +182,16 @@ public class AuthServiceImp implements AuthService {
 
     @Override
     public void changePassword(Long userId, ChangePasswordRequestDTO requestDTO) {
+        if (requestDTO.getOldPass() == null || requestDTO.getOldPass().trim().isEmpty()) {
+            throw new RuntimeException("Mật khẩu cũ không được để trống");
+        }
+        if (requestDTO.getNewPass() == null || requestDTO.getNewPass().trim().isEmpty()) {
+            throw new RuntimeException("Mật khẩu mới không được để trống");
+        }
+        if (requestDTO.getConfirmNewPass() == null || requestDTO.getConfirmNewPass().trim().isEmpty()) {
+            throw new RuntimeException("Mật khẩu xác nhận không được để trống");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
@@ -174,6 +212,22 @@ public class AuthServiceImp implements AuthService {
 
     @Override
     public UserResponseDTO addAddress(Long userId, AddressRequestDTO addressRequestDTO) throws CustomerException {
+        if (addressRequestDTO.getStreet() == null || addressRequestDTO.getStreet().trim().isEmpty()) {
+            throw new CustomerException("Đường không được để trống");
+        }
+        if (addressRequestDTO.getCity() == null || addressRequestDTO.getCity().trim().isEmpty()) {
+            throw new CustomerException("Thành phố không được để trống");
+        }
+        if (addressRequestDTO.getState() == null || addressRequestDTO.getState().trim().isEmpty()) {
+            throw new CustomerException("Tỉnh/Thành không được để trống");
+        }
+        if (addressRequestDTO.getZipCode() == null || addressRequestDTO.getZipCode().trim().isEmpty()) {
+            throw new CustomerException("Mã bưu điện không được để trống");
+        }
+        if (addressRequestDTO.getCountry() == null || addressRequestDTO.getCountry().trim().isEmpty()) {
+            throw new CustomerException("Quốc gia không được để trống");
+        }
+
         // Kiểm tra xem user có tồn tại không
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomerException("Người dùng không tồn tại"));
@@ -208,10 +262,8 @@ public class AuthServiceImp implements AuthService {
                 .build();
     }
 
-
     @Override
-
-    public void deleteAddress(Long addressId, Long userId) throws CustomerException{
+    public void deleteAddress(Long addressId, Long userId) throws CustomerException {
         // Kiểm tra user có tồn tại không
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomerException("Người dùng không tồn tại"));
@@ -229,7 +281,7 @@ public class AuthServiceImp implements AuthService {
     }
 
     @Override
-    public List<AddressResponseDTO> getUserAddresses(Long userId) throws CustomerException{
+    public List<AddressResponseDTO> getUserAddresses(Long userId) throws CustomerException {
         // Kiểm tra user có tồn tại không
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomerException("Người dùng không tồn tại"));
@@ -262,6 +314,7 @@ public class AuthServiceImp implements AuthService {
                 .country(address.getCountry())
                 .build();
     }
+
     @Override
     public Long getUserIdByUsername(String username) {
         User user = userRepository.findByUsername(username)
@@ -274,6 +327,10 @@ public class AuthServiceImp implements AuthService {
 
     @Override
     public void forgotPassword(ForgotPasswordRequestDTO request) throws CustomerException {
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new CustomerException("Email không được để trống");
+        }
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomerException("Không tìm thấy người dùng với email: " + request.getEmail()));
 
@@ -294,9 +351,17 @@ public class AuthServiceImp implements AuthService {
                 "Trân trọng,\nCửa hàng đồng hồ";
         emailService.sendSimpleEmail(user.getEmail(), subject, text);
     }
+
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequestDTO request) throws CustomerException {
+        if (request.getToken() == null || request.getToken().trim().isEmpty()) {
+            throw new CustomerException("Mã xác nhận không được để trống");
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().trim().isEmpty()) {
+            throw new CustomerException("Mật khẩu mới không được để trống");
+        }
+
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
                 .orElseThrow(() -> new CustomerException("Mã xác nhận không hợp lệ"));
 

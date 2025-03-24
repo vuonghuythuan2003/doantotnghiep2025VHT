@@ -20,4 +20,5 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
     Optional<Products> findById(Long productId);
     List<Products> findTop10ByCreatedAtBetweenOrderByLikesDesc(LocalDateTime from, LocalDateTime to, Pageable pageable);
 
+    List<Products> findByCategoryCategoryId(Long categoryId);
 }

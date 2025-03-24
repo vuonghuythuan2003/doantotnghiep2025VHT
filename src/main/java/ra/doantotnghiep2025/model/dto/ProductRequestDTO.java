@@ -2,6 +2,7 @@ package ra.doantotnghiep2025.model.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 import ra.doantotnghiep2025.validator.ProductNameUnique;
 
 @AllArgsConstructor
@@ -32,7 +33,7 @@ public class ProductRequestDTO {
     @Min(value = 0, message = "Số lượng bán không được âm")
     private Integer soldQuantity;
 
-    private String image;
+    private MultipartFile image;
 
     @NotNull(message = "Mã danh mục không được để trống")
     private Long categoryId;
