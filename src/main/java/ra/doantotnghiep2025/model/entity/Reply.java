@@ -17,8 +17,8 @@ public class Reply {
     private Comment comment;
 
     @ManyToOne
-    @JoinColumn(name = "admin_id", nullable = false)
-    private User admin;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false)
     private String content;

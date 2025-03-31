@@ -15,8 +15,7 @@ public interface ProductService {
     List<ProductReponseDTO> getFeaturedProducts();
     List<ProductReponseDTO> getNewProducts();
     List<ProductReponseDTO> getBestSellerProducts(int limit);
-    List<ProductReponseDTO> getProductsByCategory(Long categoryId, int page, int size);
-    ProductReponseDTO getProductById(Long productId) throws CustomerException;
+    Page<ProductReponseDTO> getProductsByCategory(Long categoryId, int page, int size);    ProductReponseDTO getProductById(Long productId) throws CustomerException;
     List<MostLikedProductDTO> getMostLikedProducts(LocalDateTime from, LocalDateTime to);
-
+    List<ProductReponseDTO> getProductsByBrand(Long brandId, int page, int size);
 }

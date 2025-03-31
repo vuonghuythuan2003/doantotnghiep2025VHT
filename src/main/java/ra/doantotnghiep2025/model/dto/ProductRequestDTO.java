@@ -37,4 +37,7 @@ public class ProductRequestDTO {
 
     @NotNull(message = "Mã danh mục không được để trống")
     private Long categoryId;
+
+    @NotNull(message = "Mã thương hiệu không được để trống")
+    private Long brandId;
 }

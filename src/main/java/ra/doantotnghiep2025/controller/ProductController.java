@@ -1,11 +1,9 @@
 package ra.doantotnghiep2025.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +25,7 @@ public class ProductController {
         List<ProductReponseDTO> products = productService.searchProducts(keyword);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
+
     @GetMapping
     public ResponseEntity<Page<ProductReponseDTO>> getProducts(
             @RequestParam(defaultValue = "0") int page,
@@ -54,15 +53,25 @@ public class ProductController {
         return ResponseEntity.ok(products); // dựa trên số lượng đã bán giảm dần
     }
     @GetMapping("/categories/{categoryId}")
-    public ResponseEntity<List<ProductReponseDTO>> getProductsByCategory(
+    public ResponseEntity<Page<ProductReponseDTO>> getProductsByCategory(
+            @Valid
             @PathVariable Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        List<ProductReponseDTO> products = productService.getProductsByCategory(categoryId, page, size);
+        Page<ProductReponseDTO> products = productService.getProductsByCategory(categoryId, page, size);
         return ResponseEntity.ok(products);
     }
+    @GetMapping("/brands/{brandId}")
+    public ResponseEntity<List<ProductReponseDTO>> getProductsByBrand(
+            @Valid @PathVariable Long brandId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<ProductReponseDTO> products = productService.getProductsByBrand(brandId, page, size);
+        return ResponseEntity.ok(products);
+    }
+
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductReponseDTO> getProductById(@PathVariable Long productId) throws CustomerException {
+    public ResponseEntity<ProductReponseDTO> getProductById(@Valid @PathVariable Long productId) throws CustomerException {
         ProductReponseDTO product = productService.getProductById(productId);
         return ResponseEntity.ok(product);
     }

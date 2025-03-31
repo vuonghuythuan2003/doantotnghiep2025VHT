@@ -50,8 +50,12 @@ public class Products {
     private int soldQuantity = 0;
 
     @ManyToOne
-    @JoinColumn(name = "category_id", referencedColumnName = "category_id")
+    @JoinColumn(name = "category_id", nullable = false, referencedColumnName = "category_id")
     private Category category;
+
+    @ManyToOne
+    @JoinColumn(name = "brand_id", nullable = false, referencedColumnName = "brand_id")
+    private Brand brand;
 
     @PreUpdate
     public void setUpdatedAt() {

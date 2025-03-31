@@ -22,24 +22,25 @@ public class UserController {
     private final OrderService orderService;
 
     @GetMapping("/account")
-    public ResponseEntity<UserResponseDTO> getUserAccount(@RequestParam Long userId) {
+    public ResponseEntity<UserResponseDTO> getUserAccount(@Valid @RequestParam Long userId) {
         UserResponseDTO user = userService.getUserAccount(userId);
         return ResponseEntity.ok(user);
     }
     @PutMapping("/account")
-    public ResponseEntity<UserResponseDTO> updateUserAccount(@RequestParam Long userId,
+    public ResponseEntity<UserResponseDTO> updateUserAccount(@Valid @RequestParam Long userId,
                                                              @RequestBody UserUpdateRequestDTO requestDTO) {
         UserResponseDTO updatedUser = userService.updateUserAccount(userId, requestDTO);
         return ResponseEntity.ok(updatedUser);
     }
     @PutMapping("/account/change-password")
-    public ResponseEntity<String> changePassword(@RequestParam Long userId,
+    public ResponseEntity<String> changePassword(@Valid @RequestParam Long userId,
                                                  @RequestBody ChangePasswordRequestDTO requestDTO) {
         userService.changePassword(userId, requestDTO);
         return ResponseEntity.ok("Mật khẩu đã được thay đổi thành công!");
     }
     @PostMapping("/account/addresses")
     public ResponseEntity<UserResponseDTO> addAddress(
+            @Valid
             @RequestParam Long userId,
             @RequestBody AddressRequestDTO addressRequestDTO) throws CustomerException
     {
@@ -47,23 +48,24 @@ public class UserController {
     }
     @DeleteMapping("/account/addresses/{addressId}")
     public ResponseEntity<String> deleteAddress(
+            @Valid
             @PathVariable Long addressId,
             @RequestParam Long userId) throws CustomerException{
         userService.deleteAddress(addressId, userId);
         return ResponseEntity.ok("Địa chỉ đã được xoá thành công");
     }
     @GetMapping("/account/addresses")
-    public ResponseEntity<List<AddressResponseDTO>> getUserAddresses(@RequestParam Long userId) throws CustomerException{
+    public ResponseEntity<List<AddressResponseDTO>> getUserAddresses(@Valid @RequestParam Long userId) throws CustomerException{
         List<AddressResponseDTO> addresses = userService.getUserAddresses(userId);
         return ResponseEntity.ok(addresses);
     }
     @GetMapping("/account/addresses/{addressId}")
-    public ResponseEntity<AddressResponseDTO> getAddressById(@PathVariable Long addressId) throws CustomerException{
+    public ResponseEntity<AddressResponseDTO> getAddressById(@Valid @PathVariable Long addressId) throws CustomerException{
         AddressResponseDTO address = userService.getAddressById(addressId);
         return ResponseEntity.ok(address);
     }
     @GetMapping("/history/getAll")
-    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrderHistory(@RequestParam Long userId) {
+    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrderHistory(@Valid @RequestParam Long userId) {
         System.out.println("Fetching order history for userId: " + userId); // Debug
 
         return ResponseEntity.ok(orderService.getOrderHistory(userId));
@@ -71,17 +73,17 @@ public class UserController {
 
 
     @GetMapping("/history")
-    public ResponseEntity<OrderResponseDTO> getOrderBySerialNumber(@RequestParam String serialNumber) {
+    public ResponseEntity<OrderResponseDTO> getOrderBySerialNumber(@Valid @RequestParam String serialNumber) {
         return ResponseEntity.ok(orderService.getOrderBySerialNumber(serialNumber));
     }
 
     @GetMapping("/history/{orderStatus}")
-    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrdersByStatus(@PathVariable OrderStatus orderStatus) {
+    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrdersByStatus(@Valid @PathVariable OrderStatus orderStatus) {
         List<OrderHistoryResponseDTO> orders = orderService.getOrdersByStatus(orderStatus);
         return ResponseEntity.ok(orders);
     }
     @PutMapping("/history/{orderId}/cancel")
-    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId) throws CustomerException{
+    public ResponseEntity<String> cancelOrder(@Valid @PathVariable Long orderId) throws CustomerException{
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok("Order has been canceled successfully.");
     }

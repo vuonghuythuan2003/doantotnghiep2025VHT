@@ -6,12 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ra.doantotnghiep2025.advice.DataError;
 import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.service.AuthService;
 import ra.doantotnghiep2025.service.TokenService;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,25 +27,44 @@ public class AuthController {
     private TokenService tokenService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequestDTO requestDTO, BindingResult bindingResult ) throws CustomerException {
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequestDTO requestDTO, BindingResult bindingResult) throws CustomerException {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.put(error.getField(), error.getDefaultMessage());
+            }
+            return ResponseEntity.badRequest().body(new DataError<>(400, errors));
+        }
+
         UserRegisterResponseDTO responseDTO = authService.register(requestDTO);
-        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<?> login(@RequestBody UserLoginRequestDto requestDTO) throws CustomerException{
+    public ResponseEntity<?> login(@Valid @RequestBody UserLoginRequestDto requestDTO, BindingResult bindingResult) throws CustomerException {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.put(error.getField(), error.getDefaultMessage());
+            }
+            return ResponseEntity.badRequest().body(new DataError<>(400, errors));
+        }
 
         UserLoginResponse responseDTO = authService.login(requestDTO);
-        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+        return ResponseEntity.ok(responseDTO);
     }
+
     @GetMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request){
+    public ResponseEntity<?> logout(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
-        if(token != null & token.startsWith("Bearer ")){
-            token = token.substring(7);
-            tokenService.invalidateToken(token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body(new DataError<>(400, "Token không hợp lệ hoặc không tồn tại"));
         }
-        return ResponseEntity.ok("Đăng xuất");
+
+        token = token.substring(7);
+        tokenService.invalidateToken(token);
+        return ResponseEntity.ok(new DataError<>(200, "Đăng xuất thành công"));
     }
 
 }

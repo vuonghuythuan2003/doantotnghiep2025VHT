@@ -81,7 +81,7 @@ public class CommentService {
 
         Reply reply = new Reply();
         reply.setComment(comment);
-        reply.setAdmin(admin);
+        reply.getUser();
         reply.setContent(replyDTO.getContent());
         reply = replyRepository.save(reply);
 
@@ -109,8 +109,8 @@ public class CommentService {
         ReplyDTO dto = new ReplyDTO();
         dto.setId(reply.getId());
         dto.setCommentId(reply.getComment().getId());
-        dto.setAdminId(reply.getAdmin().getId());
-        dto.setAdminName(reply.getAdmin().getUsername());
+        dto.setUserId(reply.getUser().getId());
+        dto.setUserName(reply.getUser().getUsername());
         dto.setContent(reply.getContent());
         dto.setCreatedAt(reply.getCreatedAt());
         dto.setUpdatedAt(reply.getUpdatedAt());

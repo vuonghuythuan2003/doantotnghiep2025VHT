@@ -52,10 +52,9 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> {
                     // API dành cho ADMIN
-
-                    //auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN");
-
+                    // auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN"); // Nên sửa lại nếu chỉ ADMIN được truy cập
                     auth.requestMatchers("/api/v1/admin/**").permitAll();
+
                     // API dành cho USER
                     auth.requestMatchers("/api/v1/user/**").hasAuthority("USER");
 
@@ -70,6 +69,7 @@ public class SecurityConfig {
                             "/api/v1/products/new-products",
                             "/api/v1/products/best-seller-products",
                             "/api/v1/products/categories/{categoryId}",
+                            "/api/v1/products/brands/{brandId}",
                             "/api/v1/products/{productId}",
                             "/api/v1/account/forgot-password",
                             "/api/v1/account/reset-password"

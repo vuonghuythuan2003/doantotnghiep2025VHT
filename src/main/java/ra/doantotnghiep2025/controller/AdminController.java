@@ -1,6 +1,8 @@
 package ra.doantotnghiep2025.controller;
 
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +40,7 @@ public class AdminController {
     private CategoryService categoryService;
     @Autowired
     private AuthService authService;
-
+    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponseDTO>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -58,6 +60,7 @@ public class AdminController {
 
     @PutMapping("/users/{userId}/role/{roleId}")
     public ResponseEntity<String> addRoleToUser(
+            @Valid
             @PathVariable Long userId,
             @PathVariable Long roleId) throws CustomerException {
         adminService.addRoleToUser(userId, roleId);
@@ -66,6 +69,7 @@ public class AdminController {
 
     @DeleteMapping("/users/{userId}/role/{roleId}")
     public ResponseEntity<String> removeRoleFromUser(
+            @Valid
             @PathVariable Long userId,
             @PathVariable Long roleId) throws CustomerException {
         adminService.removeRoleFromUser(userId, roleId);
@@ -74,6 +78,7 @@ public class AdminController {
 
     @PutMapping("/users/{userId}")
     public ResponseEntity<String> toggleUserStatus(
+            @Valid
             @PathVariable Long userId,
             @RequestParam boolean status) throws CustomerException {
         adminService.toggleUserStatus(userId, status);
@@ -87,13 +92,14 @@ public class AdminController {
     }
 
     @GetMapping("/users/search")
-    public ResponseEntity<List<UserResponseDTO>> searchUsers(@RequestParam String username) {
+    public ResponseEntity<List<UserResponseDTO>> searchUsers(@Valid @RequestParam String username) {
         List<UserResponseDTO> userRespon = adminService.searchByUserName(username);
         return ResponseEntity.ok(userRespon);
     }
 
     @GetMapping("/products")
     public ResponseEntity<Page<ProductReponseDTO>> getProducts(
+            @Valid
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "productName") String sortBy,
@@ -109,7 +115,7 @@ public class AdminController {
     }
 
     @GetMapping("/products/{productId}")
-    public ResponseEntity<ProductReponseDTO> getProduct(@PathVariable Long productId) throws CustomerException {
+    public ResponseEntity<ProductReponseDTO> getProduct(@Valid @PathVariable Long productId) throws CustomerException {
         ProductReponseDTO product = adminService.getProductById(productId);
         return ResponseEntity.ok(product);
     }
@@ -121,19 +127,22 @@ public class AdminController {
     }
 
     @PutMapping("/products/{productId}")
-    public ResponseEntity<ProductReponseDTO> updateProduct(@PathVariable Long productId, @ModelAttribute @Valid ProductUpdateDTO productRequestDTO) throws CustomerException {
+    public ResponseEntity<ProductReponseDTO> updateProduct(@Valid @PathVariable Long productId, @ModelAttribute @Valid ProductUpdateDTO productRequestDTO) throws CustomerException {
         ProductReponseDTO updatedProduct = adminService.updateProductById(productId, productRequestDTO);
         return ResponseEntity.ok(updatedProduct);
     }
 
     @DeleteMapping("/products/{productId}")
-    public ResponseEntity<?> deleteProduct(@PathVariable Long productId) throws CustomerException {
+    public ResponseEntity<?> deleteProduct(@Valid @PathVariable Long productId) throws CustomerException {
+        logger.info("Received DELETE request for productId: {}", productId);
         adminService.deleteProductById(productId);
+        logger.info("Product with productId: {} deleted successfully", productId);
         return ResponseEntity.ok("Xóa sản phẩm thành công");
     }
 
     @GetMapping("/categories")
     public ResponseEntity<Page<CategoryResponseDTO>> getCategories(
+            @Valid
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "categoryName") String sortBy,
@@ -150,7 +159,7 @@ public class AdminController {
     }
 
     @GetMapping("/categories/{categoryId}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long categoryId) throws CustomerException {
+    public ResponseEntity<CategoryResponseDTO> getCategoryById(@Valid @PathVariable Long categoryId) throws CustomerException {
         CategoryResponseDTO category = adminService.getCategoryById(categoryId);
         return ResponseEntity.ok(category);
     }
@@ -169,7 +178,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/categories/{categoryId}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<String> deleteCategory(@Valid @PathVariable Long categoryId) {
         try {
             boolean isDeleted = adminService.deleteCategoryById(categoryId);
             if (isDeleted) {
@@ -194,14 +203,14 @@ public class AdminController {
     }
 
     @GetMapping("/orders/status/{orderStatus}")
-    public ResponseEntity<Page<OrderResponseDTO>> getOrdersByStatus(
+    public ResponseEntity<Page<OrderResponseDTO>> getOrdersByStatus(@Valid
             @PathVariable OrderStatus orderStatus, Pageable pageable) {
         Page<OrderResponseDTO> orders = orderService.getOrdersByStatus(orderStatus, pageable);
         return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/orders/{orderId}")
-    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable Long orderId) throws CustomerException {
+    public ResponseEntity<OrderResponseDTO> getOrderById(@Valid @PathVariable Long orderId) throws CustomerException {
         OrderResponseDTO orderResponse = orderService.getOrderById(orderId);
         return ResponseEntity.ok(orderResponse);
     }
@@ -216,6 +225,7 @@ public class AdminController {
 
     @GetMapping("/sales-revenue-over-time")
     public ResponseEntity<BigDecimal> getSalesRevenueOverTime(
+            @Valid
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         return ResponseEntity.ok(orderService.getSalesRevenueOverTime(from, to));
@@ -223,6 +233,7 @@ public class AdminController {
 
     @GetMapping("/reports/best-seller-products")
     public List<BestSellerProductDTO> getBestSellerProducts(
+            @Valid
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         return orderDetailService.getBestSellerProducts(from, to);
@@ -230,6 +241,7 @@ public class AdminController {
 
     @GetMapping("/reports/most-liked-products")
     public List<MostLikedProductDTO> getMostLikedProducts(
+            @Valid
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         return productService.getMostLikedProducts(from, to);
@@ -243,6 +255,7 @@ public class AdminController {
 
     @GetMapping("/reports/top-spending-customers")
     public List<TopSpendingCustomerDTO> getTopSpendingCustomers(
+            @Valid
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         return orderService.getTopSpendingCustomers(from, to);
@@ -255,6 +268,7 @@ public class AdminController {
 
     @GetMapping("/invoices-over-time")
     public Map<String, Object> getInvoiceCountOverTime(
+            @Valid
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         long count = orderService.getInvoiceCountOverTime(from, to);

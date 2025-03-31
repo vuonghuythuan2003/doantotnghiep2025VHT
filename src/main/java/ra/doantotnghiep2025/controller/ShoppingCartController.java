@@ -1,5 +1,6 @@
 package ra.doantotnghiep2025.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,17 +20,19 @@ public class ShoppingCartController {
     private ShoppingCartService shoppingCartService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<ShoppingCartResponseDTO>> getCartItems(@RequestParam Long userId) {
+    public ResponseEntity<List<ShoppingCartResponseDTO>> getCartItems(@Valid @RequestParam Long userId) {
         return ResponseEntity.ok(shoppingCartService.getShoppingCartItems(userId));
     }
     @PostMapping("/add")
     public ResponseEntity<ShoppingCartResponseDTO> addToCart (
+            @Valid
             @RequestParam Long userId,
             @Validated @RequestBody ShoppingCartRequestDTO requestDTO) throws CustomerException {
         return ResponseEntity.ok(shoppingCartService.addToCart(userId, requestDTO));
     }
     @PutMapping("/items/{cartItemId}")
     public ResponseEntity<ShoppingCartResponseDTO> updateCartItem(
+            @Valid
             @PathVariable Long cartItemId,
             @RequestBody ShoppingCartRequestDTO requestDTO) throws CustomerException{
 
@@ -37,7 +40,7 @@ public class ShoppingCartController {
         return ResponseEntity.ok(response);
     }
     @DeleteMapping("/{cartItemId}")
-    public ResponseEntity<?> removeCartItem(@RequestHeader("userId") Long userId,
+    public ResponseEntity<?> removeCartItem(@Valid @RequestHeader("userId") Long userId,
                                             @PathVariable Long cartItemId) {
         try {
             shoppingCartService.removeCartItem(userId, cartItemId);
@@ -47,7 +50,7 @@ public class ShoppingCartController {
         }
     }
     @DeleteMapping("/clear")
-    public ResponseEntity<?> clearCart(@RequestHeader("userId") Long userId) {
+    public ResponseEntity<?> clearCart(@Valid @RequestHeader("userId") Long userId) {
         try {
             shoppingCartService.clearCart(userId);
             return ResponseEntity.ok("Giỏ hàng đã được xóa thành công.");
@@ -57,6 +60,7 @@ public class ShoppingCartController {
     }
     @PostMapping("/checkout")
     public ResponseEntity<OrderResponseDTO> checkout(
+            @Valid
             @RequestParam Long userId,
             @RequestParam String receiveAddress,
             @RequestParam String receiveName,

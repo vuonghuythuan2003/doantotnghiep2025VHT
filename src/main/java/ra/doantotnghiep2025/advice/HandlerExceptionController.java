@@ -1,6 +1,7 @@
 package ra.doantotnghiep2025.advice;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -13,21 +14,17 @@ import java.util.Map;
 @RestControllerAdvice
 public class HandlerExceptionController {
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public DataError<Map<String, String>> handlerValidException(MethodArgumentNotValidException exception) {
-        Map<String, String> maps = new HashMap<>();
+    public ResponseEntity<DataError<Map<String, String>>> handlerValidException(MethodArgumentNotValidException exception) {
+        Map<String, String> errors = new HashMap<>();
         exception.getFieldErrors().forEach(
-                fieldError -> maps.put(
-                        fieldError.getField(),
-                        fieldError.getDefaultMessage()
-                )
+                fieldError -> errors.put(fieldError.getField(), fieldError.getDefaultMessage())
         );
-        return new DataError<>(400, maps);
+        return ResponseEntity.badRequest().body(new DataError<>(400, errors));
     }
 
     @ExceptionHandler(CustomerException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public DataError<String> handlerCustomException(CustomerException exception) {
-        return new DataError<>(404, exception.getMessage());
+    public ResponseEntity<DataError<String>> handlerCustomException(CustomerException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new DataError<>(404, exception.getMessage()));
     }
+
 }

@@ -1,5 +1,6 @@
 package ra.doantotnghiep2025.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +17,13 @@ public class CommentController {
     private CommentService commentService;
 
     @PostMapping
-    public ResponseEntity<CommentDTO> createComment(@RequestBody CommentDTO commentDTO) {
+    public ResponseEntity<CommentDTO> createComment(@Valid  @RequestBody CommentDTO commentDTO) {
         CommentDTO createdComment = commentService.createComment(commentDTO);
         return ResponseEntity.ok(createdComment);
     }
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<List<CommentDTO>> getCommentsByProductId(@PathVariable Long productId) {
+    public ResponseEntity<List<CommentDTO>> getCommentsByProductId(@Valid @PathVariable Long productId) {
         List<CommentDTO> comments = commentService.getCommentsByProductId(productId);
         return ResponseEntity.ok(comments);
     }

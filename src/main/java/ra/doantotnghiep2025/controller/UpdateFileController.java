@@ -1,5 +1,6 @@
 package ra.doantotnghiep2025.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ public class UpdateFileController {
     @Autowired
     private UploadFileService uploadFileService;
     @PostMapping("")
-    public ResponseEntity<String> upload(@RequestParam MultipartFile file) {
+    public ResponseEntity<String> upload(@Valid  @RequestParam MultipartFile file) {
         try {
             String fileName = uploadFileService.uploadFile(file);
             return new ResponseEntity<>(fileName, HttpStatus.CREATED);

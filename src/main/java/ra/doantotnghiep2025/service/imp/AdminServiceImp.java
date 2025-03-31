@@ -7,14 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
-import ra.doantotnghiep2025.model.entity.Category;
-import ra.doantotnghiep2025.model.entity.Products;
-import ra.doantotnghiep2025.model.entity.Role;
-import ra.doantotnghiep2025.model.entity.User;
-import ra.doantotnghiep2025.repository.CategoryRepository;
-import ra.doantotnghiep2025.repository.ProductRepository;
-import ra.doantotnghiep2025.repository.RoleRepository;
-import ra.doantotnghiep2025.repository.UserRepository;
+import ra.doantotnghiep2025.model.entity.*;
+import ra.doantotnghiep2025.repository.*;
 import ra.doantotnghiep2025.service.AdminService;
 import ra.doantotnghiep2025.service.UploadFileService;
 
@@ -38,6 +32,8 @@ public class AdminServiceImp implements AdminService {
     private CategoryRepository categoryRepository;
     @Autowired
     private UploadFileService uploadFileService;
+    @Autowired
+    private BrandRepository brandRepository;
 
     @Override
     public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
@@ -113,6 +109,10 @@ public class AdminServiceImp implements AdminService {
         Category category = categoryRepository.findById(productRequestDTO.getCategoryId())
                 .orElseThrow(() -> new CustomerException("Danh mục không tồn tại!"));
 
+        // Kiểm tra thương hiệu
+        Brand brand = brandRepository.findById(productRequestDTO.getBrandId())
+                .orElseThrow(() -> new CustomerException("Thương hiệu không tồn tại!"));
+
         String fileUrl = null;
         if (productRequestDTO.getImage() != null && !productRequestDTO.getImage().isEmpty()) {
             try {
@@ -131,6 +131,7 @@ public class AdminServiceImp implements AdminService {
                 .soldQuantity(productRequestDTO.getSoldQuantity() != null ? productRequestDTO.getSoldQuantity() : 0)
                 .productImage(fileUrl)
                 .category(category)
+                .brand(brand) // Gán thương hiệu cho sản phẩm
                 .build();
 
         Products savedProduct = productRepository.save(product);
@@ -312,6 +313,7 @@ public class AdminServiceImp implements AdminService {
                 .soldQuantity(product.getSoldQuantity())
                 .image(product.getProductImage())
                 .categoryId(product.getCategory().getCategoryId())
+                .brandId(product.getBrand() != null ? product.getBrand().getBrandId() : null)
                 .createdAt(Timestamp.valueOf(product.getCreatedAt()))
                 .updatedAt(product.getUpdatedAt() != null ? Timestamp.valueOf(product.getUpdatedAt()) : null)
                 .build();
