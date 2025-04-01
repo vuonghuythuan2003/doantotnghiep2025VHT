@@ -159,7 +159,7 @@ public class AdminController {
     }
 
     @GetMapping("/categories/{categoryId}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryById(@Valid @PathVariable Long categoryId) throws CustomerException {
+    public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long categoryId) throws CustomerException {
         CategoryResponseDTO category = adminService.getCategoryById(categoryId);
         return ResponseEntity.ok(category);
     }
@@ -178,7 +178,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/categories/{categoryId}")
-    public ResponseEntity<String> deleteCategory(@Valid @PathVariable Long categoryId) {
+    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
         try {
             boolean isDeleted = adminService.deleteCategoryById(categoryId);
             if (isDeleted) {
