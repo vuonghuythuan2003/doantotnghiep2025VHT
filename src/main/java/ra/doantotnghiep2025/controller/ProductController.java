@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ra.doantotnghiep2025.exception.CustomerException;
+import ra.doantotnghiep2025.model.dto.BrandResponseDTO;
 import ra.doantotnghiep2025.model.dto.ProductReponseDTO;
+import ra.doantotnghiep2025.service.BrandService;
 import ra.doantotnghiep2025.service.ProductService;
 
 import java.util.List;
@@ -19,7 +21,8 @@ import java.util.List;
 public class ProductController {
     @Autowired
     private ProductService productService;
-
+    @Autowired
+    private BrandService brandService;
     @GetMapping("/search")
     public ResponseEntity<List<ProductReponseDTO>> searchProducts(@RequestParam String keyword) {
         List<ProductReponseDTO> products = productService.searchProducts(keyword);
@@ -74,5 +77,14 @@ public class ProductController {
     public ResponseEntity<ProductReponseDTO> getProductById(@Valid @PathVariable Long productId) throws CustomerException {
         ProductReponseDTO product = productService.getProductById(productId);
         return ResponseEntity.ok(product);
+    }
+    @GetMapping("/brands")
+    public ResponseEntity<Page<BrandResponseDTO>> getBrands(
+            @Valid
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "brandName") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return ResponseEntity.ok(brandService.getBrands(page, size, sortBy, direction));
     }
 }

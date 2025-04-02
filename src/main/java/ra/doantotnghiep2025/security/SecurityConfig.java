@@ -51,14 +51,15 @@ public class SecurityConfig {
                 }))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> {
-                    // 1. Khách hàng vãng lai (Guest) - API công khai, không cần đăng nhập
+                    // 1. Khách hàng vãng lai (Guest)  - API công khai, không cần đăng nhập
                     auth.requestMatchers(
                             "/api/v1/auth/sign-up",              // Đăng ký
                             "/api/v1/auth/sign-in",              // Đăng nhập
                             "/api/v1/auth/logout",               // Đăng xuất (Thêm vào đây)
                             "/api/v1/categories",                // Danh mục sản phẩm
                             "/api/v1/products/search",           // Tìm kiếm sản phẩm
-                            "/api/v1/products",                  // Danh sách sản phẩm
+                            "/api/v1/products",                    // danh sách sản phẩm
+                            "/api/v1/products/brands",             // danh sách thương hiệu
                             "/api/v1/products/featured-products", // Sản phẩm nổi bật
                             "/api/v1/products/new-products",     // Sản phẩm mới
                             "/api/v1/products/best-seller-products", // Sản phẩm bán chạy

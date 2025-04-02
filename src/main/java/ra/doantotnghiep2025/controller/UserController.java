@@ -2,6 +2,8 @@ package ra.doantotnghiep2025.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +12,7 @@ import ra.doantotnghiep2025.exception.CustomerException;
 import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.model.entity.OrderStatus;
 import ra.doantotnghiep2025.service.AuthService;
+import ra.doantotnghiep2025.service.BrandService;
 import ra.doantotnghiep2025.service.OrderService;
 
 import java.util.List;
