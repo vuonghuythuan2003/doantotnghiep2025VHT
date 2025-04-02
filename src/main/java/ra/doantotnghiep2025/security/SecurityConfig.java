@@ -39,10 +39,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF vì dùng JWT
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:5173/"));
+                    config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
                     config.setAllowedMethods(List.of("*"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setExposedHeaders(List.of("*"));
@@ -51,37 +51,38 @@ public class SecurityConfig {
                 }))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> {
-                    // API dành cho ADMIN
-                    // auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN"); // Nên sửa lại nếu chỉ ADMIN được truy cập
-                    auth.requestMatchers("/api/v1/admin/**").permitAll();
-
-                    // API dành cho USER
-                    auth.requestMatchers("/api/v1/user/**").hasAuthority("USER");
-
-                    // API công khai (không cần đăng nhập)
+                    // 1. Khách hàng vãng lai (Guest) - API công khai, không cần đăng nhập
                     auth.requestMatchers(
-                            "/api/v1/auth/sign-up",
-                            "/api/v1/auth/sign-in",
-                            "/api/v1/categories",
-                            "/api/v1/products/search",
-                            "/api/v1/products",
-                            "/api/v1/products/featured-products",
-                            "/api/v1/products/new-products",
-                            "/api/v1/products/best-seller-products",
-                            "/api/v1/products/categories/{categoryId}",
-                            "/api/v1/products/brands/{brandId}",
-                            "/api/v1/products/{productId}",
-                            "/api/v1/account/forgot-password",
-                            "/api/v1/account/reset-password"
+                            "/api/v1/auth/sign-up",              // Đăng ký
+                            "/api/v1/auth/sign-in",              // Đăng nhập
+                            "/api/v1/auth/logout",               // Đăng xuất (Thêm vào đây)
+                            "/api/v1/categories",                // Danh mục sản phẩm
+                            "/api/v1/products/search",           // Tìm kiếm sản phẩm
+                            "/api/v1/products",                  // Danh sách sản phẩm
+                            "/api/v1/products/featured-products", // Sản phẩm nổi bật
+                            "/api/v1/products/new-products",     // Sản phẩm mới
+                            "/api/v1/products/best-seller-products", // Sản phẩm bán chạy
+                            "/api/v1/products/categories/{categoryId}", // Sản phẩm theo danh mục
+                            "/api/v1/products/brands/{brandId}", // Sản phẩm theo thương hiệu
+                            "/api/v1/products/{productId}",      // Chi tiết sản phẩm
+                            "/api/v1/account/forgot-password",   // Quên mật khẩu
+                            "/api/v1/account/reset-password"     // Đặt lại mật khẩu
                     ).permitAll();
 
+                    // 2. Khách hàng (User) - API yêu cầu đăng nhập và vai trò USER
+                    auth.requestMatchers("/api/v1/user/**").hasAuthority("USER");
+
+                    // 3. Admin - API yêu cầu đăng nhập và vai trò ADMIN
+                    auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN");
+
+                    // Tất cả các request khác cần xác thực
                     auth.anyRequest().authenticated();
                 })
-                .sessionManagement(auth -> auth.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(auth -> auth.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Không dùng session
                 .exceptionHandling(auth -> auth
-                        .authenticationEntryPoint(jwtEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler))
-                .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                        .authenticationEntryPoint(jwtEntryPoint) // Xử lý lỗi xác thực
+                        .accessDeniedHandler(customAccessDeniedHandler)) // Xử lý lỗi quyền truy cập
+                .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class) // Thêm filter JWT
                 .build();
     }
 
