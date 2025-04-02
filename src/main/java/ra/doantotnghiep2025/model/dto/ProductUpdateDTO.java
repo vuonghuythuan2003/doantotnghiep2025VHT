@@ -2,7 +2,6 @@ package ra.doantotnghiep2025.model.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
-import ra.doantotnghiep2025.validator.ProductNameUnique;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -35,4 +34,7 @@ public class ProductUpdateDTO {
 
     @NotNull(message = "Mã danh mục không được để trống")
     private Long categoryId;
+
+    @NotNull(message = "Mã thương hiệu không được để trống")
+    private Long brandId;
 }

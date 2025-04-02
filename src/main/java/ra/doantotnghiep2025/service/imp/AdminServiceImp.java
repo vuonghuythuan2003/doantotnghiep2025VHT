@@ -143,13 +143,11 @@ public class AdminServiceImp implements AdminService {
         Products product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomerException("Mã sản phẩm không tồn tại"));
 
-        if (!product.getProductName().equals(productRequestDTO.getProductName()) &&
-                productRepository.existsByProductName(productRequestDTO.getProductName())) {
-            throw new CustomerException("Tên sản phẩm đã tồn tại");
-        }
-
         Category category = categoryRepository.findById(productRequestDTO.getCategoryId())
                 .orElseThrow(() -> new CustomerException("Mã danh mục không tồn tại"));
+
+        Brand brand = brandRepository.findById(productRequestDTO.getBrandId())
+                .orElseThrow(() -> new CustomerException("Mã thương hiệu không tồn tại"));
 
         String fileUrl = product.getProductImage();
         if (productRequestDTO.getImage() != null && !productRequestDTO.getImage().isEmpty()) {
@@ -168,9 +166,10 @@ public class AdminServiceImp implements AdminService {
         product.setProductDescription(productRequestDTO.getDescription());
         product.setProductPrice(productRequestDTO.getUnitPrice());
         product.setProductQuantity(productRequestDTO.getStockQuantity());
-        product.setSoldQuantity(productRequestDTO.getSoldQuantity());
+        product.setSoldQuantity(productRequestDTO.getSoldQuantity() != null ? productRequestDTO.getSoldQuantity() : 0); // Xử lý null
         product.setProductImage(fileUrl);
         product.setCategory(category);
+        product.setBrand(brand);
 
         productRepository.save(product);
         return convertToProdcutDto(product);

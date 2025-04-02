@@ -26,7 +26,7 @@ public class AuthController {
     @Autowired
     private TokenService tokenService;
 
-    @PostMapping("/sign-up")
+       @PostMapping("/sign-up")
     public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequestDTO requestDTO, BindingResult bindingResult) throws CustomerException {
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();

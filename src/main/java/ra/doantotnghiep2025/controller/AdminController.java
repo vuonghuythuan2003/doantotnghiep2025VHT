@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import ra.doantotnghiep2025.exception.CustomerException;
@@ -126,10 +127,18 @@ public class AdminController {
         return new ResponseEntity<>(newProduct, HttpStatus.CREATED);
     }
 
-    @PutMapping("/products/{productId}")
-    public ResponseEntity<ProductReponseDTO> updateProduct(@Valid @PathVariable Long productId, @ModelAttribute @Valid ProductUpdateDTO productRequestDTO) throws CustomerException {
-        ProductReponseDTO updatedProduct = adminService.updateProductById(productId, productRequestDTO);
-        return ResponseEntity.ok(updatedProduct);
+    @PutMapping(value = "/products/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductReponseDTO> updateProduct(
+            @PathVariable Long productId,
+            @Valid @ModelAttribute ProductUpdateDTO productRequestDTO) throws CustomerException {
+        try {
+            ProductReponseDTO updatedProduct = adminService.updateProductById(productId, productRequestDTO);
+            return ResponseEntity.ok(updatedProduct);
+        } catch (CustomerException e) {
+            throw e; // Ném lại ngoại lệ để được xử lý bởi GlobalExceptionHandler (nếu có)
+        } catch (Exception e) {
+            throw new CustomerException("Lỗi không xác định khi cập nhật sản phẩm: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/products/{productId}")
