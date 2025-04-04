@@ -1,6 +1,6 @@
-package ra.doantotnghiep2025.model.entity;
+    package ra.doantotnghiep2025.model.entity;
 
-public enum OrderStatus {
-    WAITING, CONFIRM, DELIVERY, SUCCESS, CANCEL
-}
+    public enum OrderStatus {
+        WAITING, CONFIRM, DELIVERY, SUCCESS, CANCEL
+    }
 

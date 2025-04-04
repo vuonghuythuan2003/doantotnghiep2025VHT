@@ -29,7 +29,6 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
     private ShoppingCartRepository shoppingCartRepository;
     @Autowired
     private ProductRepository productRepository;
-
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -39,19 +38,20 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
 
     @Override
     public List<ShoppingCartResponseDTO> getShoppingCartItems(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         return shoppingCartRepository.findByUser(user).stream().map(cart -> ShoppingCartResponseDTO.builder()
                 .shoppingCartId(cart.getShoppingCartId())
                 .productId(cart.getProduct().getProductId())
                 .productName(cart.getProduct().getProductName())
                 .unitPrice(BigDecimal.valueOf(cart.getProduct().getProductPrice()))
                 .orderQuantity(cart.getOrderQuantity())
+                .image(cart.getProduct().getProductImage()) // Thêm hình ảnh từ Products
                 .build()).collect(Collectors.toList());
     }
 
     @Override
-
-    public ShoppingCartResponseDTO addToCart(Long userId, ShoppingCartRequestDTO requestDTO) throws CustomerException{
+    public ShoppingCartResponseDTO addToCart(Long userId, ShoppingCartRequestDTO requestDTO) throws CustomerException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomerException("Người dùng không tồn tại"));
 
@@ -74,31 +74,29 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
                 .productName(savedCart.getProduct().getProductName())
                 .unitPrice(BigDecimal.valueOf(savedCart.getProduct().getProductPrice()))
                 .orderQuantity(savedCart.getOrderQuantity())
+                .image(savedCart.getProduct().getProductImage()) // Thêm hình ảnh từ Products
                 .build();
     }
 
     @Override
-    public ShoppingCartResponseDTO updateCartItem(Long cartItemId, int quantity) throws CustomerException{
-        // Tìm cart item theo ID
+    public ShoppingCartResponseDTO updateCartItem(Long cartItemId, int quantity) throws CustomerException {
         ShoppingCart cart = shoppingCartRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Sản phẩm trong giỏ hàng không tồn tại"));
+                .orElseThrow(() -> new CustomerException("Sản phẩm trong giỏ hàng không tồn tại"));
 
-        // Cập nhật số lượng
         cart.setOrderQuantity(quantity);
         ShoppingCart updatedCart = shoppingCartRepository.save(cart);
 
-        // Trả về response
         return ShoppingCartResponseDTO.builder()
                 .shoppingCartId(updatedCart.getShoppingCartId())
                 .productId(updatedCart.getProduct().getProductId())
                 .productName(updatedCart.getProduct().getProductName())
                 .unitPrice(BigDecimal.valueOf(updatedCart.getProduct().getProductPrice()))
                 .orderQuantity(updatedCart.getOrderQuantity())
+                .image(updatedCart.getProduct().getProductImage()) // Thêm hình ảnh từ Products
                 .build();
     }
 
     @Override
-
     public void removeCartItem(Long userId, Long cartItemId) throws CustomerException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomerException("Người dùng không tồn tại"));
@@ -120,17 +118,14 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
     @Override
     @Transactional
     public OrderResponseDTO checkout(Long userId, String receiveAddress, String receiveName, String receivePhone, String note) {
-        // Lấy thông tin người dùng
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Người dùng không tồn tại"));
 
-        // Lấy danh sách sản phẩm trong giỏ hàng
         List<ShoppingCart> cartItems = shoppingCartRepository.findByUser(user);
         if (cartItems.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Giỏ hàng trống!");
         }
 
-        // Kiểm tra số lượng sản phẩm có đủ không
         for (ShoppingCart cartItem : cartItems) {
             Products product = cartItem.getProduct();
             if (product.getProductQuantity() < cartItem.getOrderQuantity()) {
@@ -139,33 +134,28 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
             }
         }
 
-        // Tạo mã đơn hàng (serialNumber)
         String serialNumber = UUID.randomUUID().toString();
-
-        // Nếu không có ghi chú, đặt giá trị mặc định
         if (note == null || note.trim().isEmpty()) {
             note = "Không có ghi chú";
         }
 
-        // Tạo đơn hàng
         Order order = Order.builder()
                 .user(user)
                 .serialNumber(serialNumber)
                 .createdAt(LocalDateTime.now())
-                .receivedAt(LocalDateTime.now().plusDays(4)) // Ngày nhận hàng mặc định +4 ngày
+                .receivedAt(LocalDateTime.now().plusDays(4))
                 .status(OrderStatus.WAITING)
                 .totalPrice(BigDecimal.ZERO)
                 .receiveAddress(receiveAddress)
                 .receiveName(receiveName)
                 .receivePhone(receivePhone)
-                .note(note)  // Gán giá trị ghi chú
+                .note(note)
                 .build();
         orderRepository.save(order);
 
         BigDecimal total = BigDecimal.ZERO;
         Set<OrderDetailResponseDTO> orderDetailList = new HashSet<>();
 
-        // Xử lý đơn hàng và cập nhật sản phẩm
         for (ShoppingCart cartItem : cartItems) {
             Products product = cartItem.getProduct();
             product.setProductQuantity(product.getProductQuantity() - cartItem.getOrderQuantity());
@@ -183,7 +173,6 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
             total = total.add(BigDecimal.valueOf(product.getProductPrice())
                     .multiply(BigDecimal.valueOf(cartItem.getOrderQuantity())));
 
-            // Thêm vào danh sách orderDetailList để trả về DTO
             orderDetailList.add(OrderDetailResponseDTO.builder()
                     .id(orderDetail.getId())
                     .name(orderDetail.getName())
@@ -194,11 +183,9 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
                     .build());
         }
 
-        // Cập nhật tổng tiền đơn hàng
         order.setTotalPrice(total);
         orderRepository.save(order);
 
-        // Xóa giỏ hàng sau khi đặt hàng thành công
         shoppingCartRepository.deleteAll(cartItems);
 
         return OrderResponseDTO.builder()
@@ -215,6 +202,4 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
                 .note(order.getNote())
                 .build();
     }
-
-
 }

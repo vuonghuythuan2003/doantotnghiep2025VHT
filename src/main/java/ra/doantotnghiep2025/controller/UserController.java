@@ -14,6 +14,7 @@ import ra.doantotnghiep2025.model.entity.OrderStatus;
 import ra.doantotnghiep2025.service.AuthService;
 import ra.doantotnghiep2025.service.BrandService;
 import ra.doantotnghiep2025.service.OrderService;
+import ra.doantotnghiep2025.service.ProductService;
 
 import java.util.List;
 
@@ -23,7 +24,10 @@ import java.util.List;
 public class UserController {
     private final AuthService userService;
     private final OrderService orderService;
-
+    @Autowired
+    private ProductService productService;
+    @Autowired
+    private BrandService brandService;
     @GetMapping("/account")
     public ResponseEntity<UserResponseDTO> getUserAccount(@Valid @RequestParam Long userId) {
         UserResponseDTO user = userService.getUserAccount(userId);
@@ -90,7 +94,27 @@ public class UserController {
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok("Order has been canceled successfully.");
     }
+    @GetMapping("/brands")
+    public ResponseEntity<Page<BrandResponseDTO>> getBrands(
+            @Valid
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "brandName") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return ResponseEntity.ok(brandService.getBrands(page, size, sortBy, direction));
+    }
 
-
-
+    @GetMapping("/brands/{brandId}")
+    public ResponseEntity<List<ProductReponseDTO>> getProductsByBrand(
+            @Valid @PathVariable Long brandId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<ProductReponseDTO> products = productService.getProductsByBrand(brandId, page, size);
+        return ResponseEntity.ok(products);
+    }
+    @GetMapping("/{brandId}")
+    public ResponseEntity<BrandResponseDTO> getBrandById(@PathVariable Long brandId) throws CustomerException {
+        BrandResponseDTO brand = brandService.getBrandById(brandId);
+        return ResponseEntity.ok(brand);
+    }
 }

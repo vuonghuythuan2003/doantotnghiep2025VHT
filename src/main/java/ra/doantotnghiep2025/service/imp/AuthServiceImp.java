@@ -61,6 +61,7 @@ public class AuthServiceImp implements AuthService {
 
         UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
         return UserLoginResponse.builder()
+                .userId(userPrinciple.getUser().getId()) // Thêm userId từ User entity
                 .username(userPrinciple.getUsername())
                 .typeToken("Bearer Token")
                 .accessToken(jwtProvider.generateToken(userPrinciple))

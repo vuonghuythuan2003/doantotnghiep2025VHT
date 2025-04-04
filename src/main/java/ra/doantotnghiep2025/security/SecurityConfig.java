@@ -59,12 +59,12 @@ public class SecurityConfig {
                             "/api/v1/categories",                // Danh mục sản phẩm
                             "/api/v1/products/search",           // Tìm kiếm sản phẩm
                             "/api/v1/products",                    // danh sách sản phẩm
-                            "/api/v1/products/brands",             // danh sách thương hiệu
+                         //   "/api/v1/products/brands",             // danh sách thương hiệu
                             "/api/v1/products/featured-products", // Sản phẩm nổi bật
                             "/api/v1/products/new-products",     // Sản phẩm mới
                             "/api/v1/products/best-seller-products", // Sản phẩm bán chạy
                             "/api/v1/products/categories/{categoryId}", // Sản phẩm theo danh mục
-                            "/api/v1/products/brands/{brandId}", // Sản phẩm theo thương hiệu
+                         //   "/api/v1/products/brands/{brandId}", // Sản phẩm theo thương hiệu
                             "/api/v1/products/{productId}",      // Chi tiết sản phẩm
                             "/api/v1/account/forgot-password",   // Quên mật khẩu
                             "/api/v1/account/reset-password"     // Đặt lại mật khẩu

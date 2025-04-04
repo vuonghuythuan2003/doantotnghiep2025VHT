@@ -51,6 +51,7 @@ public class AuthController {
         }
 
         UserLoginResponse responseDTO = authService.login(requestDTO);
+        System.out.println("Phản hồi từ login: " + responseDTO); // Logging dữ liệu trả về
         return ResponseEntity.ok(responseDTO);
     }
 

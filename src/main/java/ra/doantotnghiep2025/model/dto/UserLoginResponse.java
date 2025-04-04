@@ -10,6 +10,7 @@ import java.util.Set;
 @Setter
 @Builder
 public class UserLoginResponse {
+    private Long userId;
     private String username;
     private String typeToken;
     private String accessToken;

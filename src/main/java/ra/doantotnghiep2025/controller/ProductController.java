@@ -21,8 +21,7 @@ import java.util.List;
 public class ProductController {
     @Autowired
     private ProductService productService;
-    @Autowired
-    private BrandService brandService;
+
     @GetMapping("/search")
     public ResponseEntity<List<ProductReponseDTO>> searchProducts(@RequestParam String keyword) {
         List<ProductReponseDTO> products = productService.searchProducts(keyword);
@@ -64,27 +63,13 @@ public class ProductController {
         Page<ProductReponseDTO> products = productService.getProductsByCategory(categoryId, page, size);
         return ResponseEntity.ok(products);
     }
-    @GetMapping("/brands/{brandId}")
-    public ResponseEntity<List<ProductReponseDTO>> getProductsByBrand(
-            @Valid @PathVariable Long brandId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        List<ProductReponseDTO> products = productService.getProductsByBrand(brandId, page, size);
-        return ResponseEntity.ok(products);
-    }
+
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductReponseDTO> getProductById(@Valid @PathVariable Long productId) throws CustomerException {
         ProductReponseDTO product = productService.getProductById(productId);
         return ResponseEntity.ok(product);
     }
-    @GetMapping("/brands")
-    public ResponseEntity<Page<BrandResponseDTO>> getBrands(
-            @Valid
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "brandName") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
-        return ResponseEntity.ok(brandService.getBrands(page, size, sortBy, direction));
-    }
+
+
 }
