@@ -23,4 +23,5 @@ public class OrderResponseDTO {
     private String receivePhone;
     private LocalDateTime createdAt;
     private LocalDateTime receivedAt;
+    private String payUrl;
 }

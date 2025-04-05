@@ -15,4 +15,5 @@ public class ShoppingCartResponseDTO {
     private BigDecimal unitPrice;
     private int orderQuantity;
     private String image;
+
 }
