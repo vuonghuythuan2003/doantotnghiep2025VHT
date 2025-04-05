@@ -1,12 +1,19 @@
 package ra.doantotnghiep2025.controller;
 
-import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
 import com.paypal.base.rest.PayPalRESTException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ra.doantotnghiep2025.model.dto.PaypalRequest;
 import ra.doantotnghiep2025.service.PayPalService;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/paypal")
 public class PayPalController {
@@ -14,60 +21,63 @@ public class PayPalController {
     @Autowired
     private PayPalService payPalService;
 
-    @GetMapping("/pay")
-    public String payment(
-            @RequestParam Long userId,
-            @RequestParam String receiveAddress,
-            @RequestParam String receiveName,
-            @RequestParam String receivePhone,
-            @RequestParam(required = false) String note) {
-        try {
-            Payment payment = payPalService.createPayment(
-                    10.0, // Tổng tiền (có thể thay đổi tùy theo logic của bạn)
-                    "USD", // Loại tiền tệ
-                    "paypal", // Phương thức thanh toán
-                    "sale", // Ý định (sale: thanh toán ngay)
-                    "Thanh toán đơn hàng", // Mô tả
-                    userId,
-                    receiveAddress,
-                    receiveName,
-                    receivePhone,
-                    note
-            );
+    @PostMapping()
+    public ResponseEntity<Map<String, String>> createPayment(@RequestBody PaypalRequest paypalRequest) {
+        Map<String, String> response = new HashMap<>();
+        Double amount;
 
-            for (Links links : payment.getLinks()) {
-                if (links.getRel().equals("approval_url")) {
-                    return "redirect:" + links.getHref(); // Chuyển hướng người dùng đến PayPal
-                }
-            }
-        } catch (PayPalRESTException e) {
-            e.printStackTrace();
+        try {
+            amount = Double.parseDouble(paypalRequest.getTotal());
+        } catch (NumberFormatException e) {
+            log.error("Invalid amount format: {}", paypalRequest.getTotal());
+            response.put("message", "Số tiền không hợp lệ");
+            return ResponseEntity.badRequest().body(response);
         }
-        return "redirect:/error";
+
+        try {
+            String approvalUrl = payPalService.createPayment(
+                    amount,
+                    paypalRequest.getCurrency(),
+                    "Thanh toán đơn hàng",
+                    "http://localhost:5173/user/cart/checkout/cancel",
+                    "http://localhost:5173/user/cart/checkout/success",
+                    paypalRequest.getCurrency().equalsIgnoreCase("VND") // Chuyển đổi nếu là VND
+            );
+            response.put("redirectUrl", approvalUrl);
+            return ResponseEntity.ok(response);
+        } catch (PayPalRESTException e) {
+            log.error("Error creating PayPal payment: {}", e.getMessage(), e);
+            response.put("message", "Lỗi khi khởi tạo thanh toán: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     @GetMapping("/success")
-    public String successPay(
+    public ResponseEntity<Map<String, String>> successPay(
             @RequestParam("paymentId") String paymentId,
-            @RequestParam("PayerID") String payerId,
-            @RequestParam("userId") Long userId,
-            @RequestParam("receiveAddress") String receiveAddress,
-            @RequestParam("receiveName") String receiveName,
-            @RequestParam("receivePhone") String receivePhone,
-            @RequestParam(value = "note", required = false) String note) {
+            @RequestParam("PayerID") String payerId) {
+        Map<String, String> response = new HashMap<>();
         try {
             Payment payment = payPalService.executePayment(paymentId, payerId);
             if (payment.getState().equals("approved")) {
-                return "Thanh toán thành công!";
+                response.put("message", "Thanh toán thành công! Payment ID: " + payment.getId());
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("message", "Thanh toán không được phê duyệt!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (PayPalRESTException e) {
-            e.printStackTrace();
+            log.error("Error executing PayPal payment: {}", e.getMessage(), e);
+            response.put("message", "Lỗi khi thực thi thanh toán: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        return "Có lỗi xảy ra!";
     }
 
     @GetMapping("/cancel")
-    public String cancelPay() {
-        return "Thanh toán đã bị hủy!";
+    public ResponseEntity<Map<String, String>> cancelPay() {
+        log.info("PayPal payment cancelled");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Thanh toán đã bị hủy!");
+        return ResponseEntity.ok(response);
     }
 }

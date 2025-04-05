@@ -17,9 +17,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import ra.doantotnghiep2025.security.jwt.CustomAccessDeniedHandler;
 import ra.doantotnghiep2025.security.jwt.JwtAuthTokenFilter;
 import ra.doantotnghiep2025.security.jwt.JwtEntryPoint;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -38,12 +40,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+        log.info("Configuring Spring Security...");
         return httpSecurity
-                .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF vì dùng JWT
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
-                    config.setAllowedMethods(List.of("*"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setExposedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
@@ -51,44 +54,43 @@ public class SecurityConfig {
                 }))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> {
-                    // 1. Khách hàng vãng lai (Guest)  - API công khai, không cần đăng nhập
                     auth.requestMatchers(
-                            "/api/v1/auth/sign-up",              // Đăng ký
-                            "/api/v1/auth/sign-in",              // Đăng nhập
-                            "/api/v1/auth/logout",               // Đăng xuất (Thêm vào đây)
-                            "/api/v1/categories",                // Danh mục sản phẩm
-                            "/api/v1/products/search",           // Tìm kiếm sản phẩm
-                            "/api/v1/products",                    // danh sách sản phẩm
-                         //   "/api/v1/products/brands",             // danh sách thương hiệu
-                            "/api/v1/products/featured-products", // Sản phẩm nổi bật
-                            "/api/v1/products/new-products",     // Sản phẩm mới
-                            "/api/v1/products/best-seller-products", // Sản phẩm bán chạy
-                            "/api/v1/products/categories/{categoryId}", // Sản phẩm theo danh mục
-                         //   "/api/v1/products/brands/{brandId}", // Sản phẩm theo thương hiệu
-                            "/api/v1/products/{productId}",      // Chi tiết sản phẩm
-                            "/api/v1/account/forgot-password",   // Quên mật khẩu
-                            "/api/v1/account/reset-password"     // Đặt lại mật khẩu
+                            "/api/v1/auth/sign-up",
+                            "/api/v1/auth/sign-in",
+                            "/api/v1/categories",
+                            "/api/v1/products/search",
+                            "/api/v1/products",
+                            "/api/v1/products/featured-products",
+                            "/api/v1/products/new-products",
+                            "/api/v1/products/best-seller-products",
+                            "/api/v1/products/categories/{categoryId}",
+                            "/api/v1/products/{productId}",
+                            "/api/v1/account/forgot-password",
+                            "/api/v1/account/reset-password",
+                            "/api/v1/user/cart/checkout/success",
+                            "/api/v1/user/cart/checkout/cancel",
+                            "/api/paypal/**" // Cho phép tất cả endpoint PayPal
                     ).permitAll();
 
-                    // 2. Khách hàng (User) - API yêu cầu đăng nhập và vai trò USER
+                    auth.requestMatchers("/api/v1/auth/logout").authenticated();
+
                     auth.requestMatchers("/api/v1/user/**").hasAuthority("USER");
 
-                    // 3. Admin - API yêu cầu đăng nhập và vai trò ADMIN
                     auth.requestMatchers("/api/v1/admin/**").hasAuthority("ADMIN");
 
-                    // Tất cả các request khác cần xác thực
                     auth.anyRequest().authenticated();
                 })
-                .sessionManagement(auth -> auth.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Không dùng session
+                .sessionManagement(auth -> auth.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(auth -> auth
-                        .authenticationEntryPoint(jwtEntryPoint) // Xử lý lỗi xác thực
-                        .accessDeniedHandler(customAccessDeniedHandler)) // Xử lý lỗi quyền truy cập
-                .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class) // Thêm filter JWT
+                        .authenticationEntryPoint(jwtEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler))
+                .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
+        log.info("Configuring AuthenticationProvider...");
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(userDetailService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
@@ -97,6 +99,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        log.info("Configuring PasswordEncoder...");
         return new BCryptPasswordEncoder();
     }
 }

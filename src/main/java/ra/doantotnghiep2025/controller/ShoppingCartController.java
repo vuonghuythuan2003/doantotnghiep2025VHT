@@ -1,10 +1,11 @@
+// File 3: ShoppingCartController.java
 package ra.doantotnghiep2025.controller;
 
-import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payment;
 import com.paypal.base.rest.PayPalRESTException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -14,12 +15,13 @@ import ra.doantotnghiep2025.model.dto.ShoppingCartRequestDTO;
 import ra.doantotnghiep2025.model.dto.ShoppingCartResponseDTO;
 import ra.doantotnghiep2025.service.PayPalService;
 import ra.doantotnghiep2025.service.ShoppingCartService;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collections;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/user/cart")
 public class ShoppingCartController {
@@ -71,56 +73,76 @@ public class ShoppingCartController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<String> checkout(
+    public ResponseEntity<Map<String, String>> checkout(
             @Valid @RequestParam Long userId,
             @RequestParam String receiveAddress,
             @RequestParam String receiveName,
             @RequestParam String receivePhone,
             @RequestParam(required = false) String note) {
+        Map<String, String> response = new HashMap<>();
+
+        // Validate receivePhone
+        if (receivePhone == null || receivePhone.length() > 15) {
+            log.warn("Invalid receivePhone: {}", receivePhone);
+            response.put("message", "Số điện thoại không hợp lệ! Độ dài tối đa là 15 ký tự.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        if (!receivePhone.matches("\\d{10,11}")) {
+            log.warn("Invalid receivePhone format: {}", receivePhone);
+            response.put("message", "Số điện thoại phải có 10-11 chữ số!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
         try {
             List<ShoppingCartResponseDTO> cartItems = shoppingCartService.getShoppingCartItems(userId);
             if (cartItems == null || cartItems.isEmpty()) {
-                System.out.println("Cart is empty for userId: " + userId);
-                return ResponseEntity.badRequest().body("Giỏ hàng trống, không thể thanh toán!");
+                log.warn("Cart is empty for userId: {}", userId);
+                response.put("message", "Giỏ hàng trống, không thể thanh toán!");
+                return ResponseEntity.badRequest().body(response);
             }
 
             double total = cartItems.stream()
                     .mapToDouble(item -> {
                         double price = (item.getUnitPrice() == null ? 0.0 : item.getUnitPrice().doubleValue());
                         int quantity = item.getOrderQuantity();
-                        System.out.println("Item: " + item.getProductName() + ", Price: " + price + ", Quantity: " + quantity);
+                        log.info("Item: {}, Price: {}, Quantity: {}", item.getProductName(), price, quantity);
                         return price * quantity;
                     })
                     .sum();
 
-            System.out.println("Calculated total for userId " + userId + ": " + total);
+            log.info("Calculated total for userId {}: {}", userId, total);
             if (total <= 0) {
-                System.out.println("Invalid total (<= 0) for userId: " + userId);
-                return ResponseEntity.badRequest().body("Tổng tiền không hợp lệ! Tổng tiền phải lớn hơn 0.");
+                log.warn("Invalid total (<= 0) for userId: {}", userId);
+                response.put("message", "Tổng tiền không hợp lệ! Tổng tiền phải lớn hơn 0.");
+                return ResponseEntity.badRequest().body(response);
             }
 
-            Payment payment = payPalService.createPayment(
+            // Sửa cách xây dựng successUrl
+            StringBuilder successUrl = new StringBuilder("http://localhost:5173/user/cart/checkout/success");
+            successUrl.append("?userId=").append(userId)
+                    .append("&receiveAddress=").append(encodeURIComponent(receiveAddress))
+                    .append("&receiveName=").append(encodeURIComponent(receiveName))
+                    .append("&receivePhone=").append(encodeURIComponent(receivePhone));
+            if (note != null) {
+                successUrl.append("&note=").append(encodeURIComponent(note));
+            }
+            String cancelUrl = "http://localhost:5173/user/cart/checkout/cancel";
+
+            String approvalUrl = payPalService.createPayment(
                     total,
-                    "USD",
-                    "paypal",
-                    "sale",
+                    "VND",
                     "Thanh toán đơn hàng cho user " + userId,
-                    userId,
-                    receiveAddress,
-                    receiveName,
-                    receivePhone,
-                    note
+                    cancelUrl,
+                    successUrl.toString(),
+                    true
             );
 
-            for (Links links : payment.getLinks()) {
-                if (links.getRel().equals("approval_url")) {
-                    return ResponseEntity.ok("redirect:" + links.getHref());
-                }
-            }
-            return ResponseEntity.status(500).body("Không tìm thấy URL thanh toán!");
+            response.put("redirectUrl", approvalUrl);
+            return ResponseEntity.ok(response);
         } catch (PayPalRESTException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Lỗi khi tạo thanh toán PayPal: " + e.getMessage());
+            log.error("Error creating PayPal payment: {}", e.getMessage(), e);
+            response.put("message", "Lỗi khi tạo thanh toán PayPal: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -133,25 +155,61 @@ public class ShoppingCartController {
             @RequestParam("receiveName") String receiveName,
             @RequestParam("receivePhone") String receivePhone,
             @RequestParam(value = "note", required = false) String note) {
+        log.info("Received callback from PayPal for paymentId: {}, payerId: {}", paymentId, payerId);
+        log.info("Received receivePhone: {}", receivePhone);
+        log.info("Received note: {}", note);
+
+        // Validate receivePhone
+        if (receivePhone == null || receivePhone.length() > 15) {
+            log.warn("Invalid receivePhone: {}", receivePhone);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Số điện thoại không hợp lệ! Độ dài tối đa là 15 ký tự.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        if (!receivePhone.matches("\\d{10,11}")) {
+            log.warn("Invalid receivePhone format: {}", receivePhone);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Số điện thoại phải có 10-11 chữ số!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        Map<String, Object> response = new HashMap<>();
         try {
             Payment payment = payPalService.executePayment(paymentId, payerId);
+            log.info("Payment state: {}", payment.getState());
             if (payment.getState().equals("approved")) {
                 OrderResponseDTO order = shoppingCartService.checkout(userId, receiveAddress, receiveName, receivePhone, note);
-                Map<String, Object> response = new HashMap<>();
+                log.info("Order created with ID: {}, cart cleared", order.getOrderId());
                 response.put("message", "Thanh toán thành công! Mã đơn hàng: " + order.getOrderId());
                 response.put("cartCleared", true);
-                response.put("redirect", "/user"); // Signal frontend to redirect
+                response.put("redirect", "/user?orderId=" + order.getOrderId());
                 return ResponseEntity.ok(response);
+            } else {
+                log.warn("Payment not approved, state: {}", payment.getState());
+                response.put("message", "Thanh toán không được phê duyệt! Trạng thái: " + payment.getState());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         } catch (PayPalRESTException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Collections.singletonMap("message", "Lỗi khi xác nhận thanh toán: " + e.getMessage()));
+            log.error("Error executing PayPal payment: {}", e.getMessage(), e);
+            response.put("message", "Lỗi khi xác nhận thanh toán: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-        return ResponseEntity.status(500).body(Collections.singletonMap("message", "Thanh toán không được phê duyệt!"));
     }
 
     @GetMapping("/checkout/cancel")
-    public ResponseEntity<String> checkoutCancel() {
-        return ResponseEntity.ok("Thanh toán đã bị hủy!");
+    public ResponseEntity<Map<String, String>> checkoutCancel() {
+        log.info("PayPal payment cancelled");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Thanh toán đã bị hủy!");
+        return ResponseEntity.ok(response);
+    }
+
+    private String encodeURIComponent(String value) {
+        try {
+            return java.net.URLEncoder.encode(value, "UTF-8");
+        } catch (Exception e) {
+            log.error("Error encoding URI component: {}", value, e);
+            return value;
+        }
     }
 }

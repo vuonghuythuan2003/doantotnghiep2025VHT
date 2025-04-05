@@ -14,6 +14,7 @@ public class ShoppingCartResponseDTO {
     private String productName;
     private BigDecimal unitPrice;
     private int orderQuantity;
+    private String currency = "VND"; // Thêm thuộc tính currency, mặc định là VND
     private String image;
 
 }

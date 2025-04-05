@@ -1,3 +1,4 @@
+// File 11: Order.java
 package ra.doantotnghiep2025.model.entity;
 
 import jakarta.persistence.*;
@@ -34,7 +35,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private OrderStatus status = OrderStatus.WAITING; // Mặc định là WAITING
+    private OrderStatus status = OrderStatus.WAITING;
 
     @Column(name = "note", length = 100)
     private String note;
@@ -45,7 +46,7 @@ public class Order {
     @Column(name = "receive_address", nullable = false, length = 255)
     private String receiveAddress;
 
-    @Column(name = "receive_phone", nullable = false, length = 15)
+    @Column(name = "receive_phone", nullable = false, length = 20) // Tăng độ dài lên 20
     private String receivePhone;
 
     @Column(name = "created_at", nullable = false, updatable = false)

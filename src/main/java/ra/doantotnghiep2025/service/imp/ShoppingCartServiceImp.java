@@ -45,8 +45,9 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
                 .productId(cart.getProduct().getProductId())
                 .productName(cart.getProduct().getProductName())
                 .unitPrice(BigDecimal.valueOf(cart.getProduct().getProductPrice()))
+                .currency("VND") // Giả sử giá sản phẩm là VND
                 .orderQuantity(cart.getOrderQuantity())
-                .image(cart.getProduct().getProductImage()) // Thêm hình ảnh từ Products
+                .image(cart.getProduct().getProductImage())
                 .build()).collect(Collectors.toList());
     }
 
@@ -73,8 +74,9 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
                 .productId(savedCart.getProduct().getProductId())
                 .productName(savedCart.getProduct().getProductName())
                 .unitPrice(BigDecimal.valueOf(savedCart.getProduct().getProductPrice()))
+                .currency("VND") // Giả sử giá sản phẩm là VND
                 .orderQuantity(savedCart.getOrderQuantity())
-                .image(savedCart.getProduct().getProductImage()) // Thêm hình ảnh từ Products
+                .image(savedCart.getProduct().getProductImage())
                 .build();
     }
 
@@ -91,8 +93,9 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
                 .productId(updatedCart.getProduct().getProductId())
                 .productName(updatedCart.getProduct().getProductName())
                 .unitPrice(BigDecimal.valueOf(updatedCart.getProduct().getProductPrice()))
+                .currency("VND") // Giả sử giá sản phẩm là VND
                 .orderQuantity(updatedCart.getOrderQuantity())
-                .image(updatedCart.getProduct().getProductImage()) // Thêm hình ảnh từ Products
+                .image(updatedCart.getProduct().getProductImage())
                 .build();
     }
 
