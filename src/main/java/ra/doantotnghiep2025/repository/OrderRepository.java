@@ -26,5 +26,4 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findBySerialNumber(String serialNumber);
     List<Order> findByStatus(OrderStatus status);
     Optional<Order> findByOrderIdAndStatus(Long orderId, OrderStatus status);
-
 }

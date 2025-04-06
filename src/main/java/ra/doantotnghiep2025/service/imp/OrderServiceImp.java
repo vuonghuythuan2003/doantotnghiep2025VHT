@@ -1,3 +1,4 @@
+// File: src/main/java/ra/doantotnghiep2025/service/imp/OrderServiceImp.java
 package ra.doantotnghiep2025.service.imp;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,9 @@ import ra.doantotnghiep2025.repository.UserRepository;
 import ra.doantotnghiep2025.service.OrderService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,12 +44,12 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public OrderResponseDTO getOrderById(Long orderId) throws CustomerException{
+    public OrderResponseDTO getOrderById(Long orderId) throws CustomerException {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomerException("Không tìm thấy đơn hàng với ID: " + orderId));
-
         return mapToOrderResponseDTO(order);
     }
+
     @Override
     public OrderResponseDTO updateOrderStatus(Long orderId, OrderStatus orderStatus) throws CustomerException {
         if (orderId == null) {
@@ -67,6 +69,7 @@ public class OrderServiceImp implements OrderService {
 
         return mapToOrderResponseDTO(order);
     }
+
     private void validateOrderStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) throws CustomerException {
         if (currentStatus == null || newStatus == null) {
             throw new CustomerException("Trạng thái hiện tại hoặc trạng thái mới không hợp lệ");
@@ -95,12 +98,34 @@ public class OrderServiceImp implements OrderService {
                 throw new CustomerException("Trạng thái hiện tại không hợp lệ: " + currentStatus);
         }
     }
+
     @Override
     public BigDecimal getSalesRevenueOverTime(LocalDateTime from, LocalDateTime to) {
         return orderRepository.findByCreatedAtBetween(from, to)
                 .stream()
-                .map(order -> order.getTotalPrice())
+                .map(Order::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Override
+    public List<RevenueOverTimeDTO> getRevenueOverTime(LocalDateTime from, LocalDateTime to) {
+        List<Order> orders = orderRepository.findByCreatedAtBetween(from, to);
+
+        // Nhóm đơn hàng theo ngày và tính tổng doanh thu
+        Map<LocalDate, BigDecimal> revenueByDate = orders.stream()
+                .collect(Collectors.groupingBy(
+                        order -> order.getCreatedAt().toLocalDate(),
+                        Collectors.reducing(BigDecimal.ZERO, Order::getTotalPrice, BigDecimal::add)
+                ));
+
+        // Chuyển đổi thành danh sách RevenueOverTimeDTO
+        return revenueByDate.entrySet().stream()
+                .map(entry -> RevenueOverTimeDTO.builder()
+                        .date(entry.getKey())
+                        .totalRevenue(entry.getValue())
+                        .build())
+                .sorted(Comparator.comparing(RevenueOverTimeDTO::getDate))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -129,7 +154,8 @@ public class OrderServiceImp implements OrderService {
                             .totalSpent(entry.getValue())
                             .build() : null;
                 })
-                .toList();
+                .filter(dto -> dto != null)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -148,7 +174,6 @@ public class OrderServiceImp implements OrderService {
 
         return orders.stream().map(this::mapToOrderHistoryResponseDTO).collect(Collectors.toList());
     }
-
 
     @Override
     public OrderResponseDTO getOrderBySerialNumber(String serialNumber) {
@@ -176,8 +201,7 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-
-    public void cancelOrder(Long orderId) throws CustomerException{
+    public void cancelOrder(Long orderId) throws CustomerException {
         Order order = orderRepository.findByOrderIdAndStatus(orderId, OrderStatus.WAITING)
                 .orElseThrow(() -> new CustomerException("Order not found or cannot be canceled"));
 
@@ -198,12 +222,12 @@ public class OrderServiceImp implements OrderService {
 
     private OrderDetailResponseDTO mapToOrderDetailResponseDTO(OrderDetail orderDetail) {
         return OrderDetailResponseDTO.builder()
-                .id(orderDetail.getId()) // ID của chi tiết đơn hàng
-                .name(orderDetail.getProduct().getProductName()) // Tên sản phẩm
-                .unitPrice(orderDetail.getUnitPrice()) // Giá từng đơn vị
-                .orderQuantity(orderDetail.getOrderQuantity()) // Số lượng đặt
-                .productId(orderDetail.getProduct().getProductId()) // ID sản phẩm
-                .productName(orderDetail.getProduct().getProductName()) // Tên sản phẩm
+                .id(orderDetail.getId())
+                .name(orderDetail.getProduct().getProductName())
+                .unitPrice(orderDetail.getUnitPrice())
+                .orderQuantity(orderDetail.getOrderQuantity())
+                .productId(orderDetail.getProduct().getProductId())
+                .productName(orderDetail.getProduct().getProductName())
                 .build();
     }
 
@@ -211,17 +235,15 @@ public class OrderServiceImp implements OrderService {
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .serialNumber(order.getSerialNumber())
-                .userId(order.getUser() != null ? order.getUser().getId() : null)                .totalPrice(order.getTotalPrice())
+                .userId(order.getUser() != null ? order.getUser().getId() : null)
+                .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
-                .note(order.getNote() != null ? order.getNote() : "")  // Tránh null
+                .note(order.getNote() != null ? order.getNote() : "")
                 .receiveName(order.getReceiveName())
                 .receiveAddress(order.getReceiveAddress())
-                .receivePhone(order.getReceivePhone().trim())  // Loại bỏ xuống dòng
+                .receivePhone(order.getReceivePhone().trim())
                 .createdAt(order.getCreatedAt())
-                .receivedAt(order.getReceivedAt()).build();
+                .receivedAt(order.getReceivedAt())
+                .build();
     }
-
-
-
-
 }

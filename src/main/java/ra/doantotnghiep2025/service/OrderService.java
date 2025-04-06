@@ -1,12 +1,10 @@
+// File: src/main/java/ra/doantotnghiep2025/service/OrderService.java
 package ra.doantotnghiep2025.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ra.doantotnghiep2025.exception.CustomerException;
-import ra.doantotnghiep2025.model.dto.BestSellerProductDTO;
-import ra.doantotnghiep2025.model.dto.OrderHistoryResponseDTO;
-import ra.doantotnghiep2025.model.dto.OrderResponseDTO;
-import ra.doantotnghiep2025.model.dto.TopSpendingCustomerDTO;
+import ra.doantotnghiep2025.model.dto.*;
 import ra.doantotnghiep2025.model.entity.OrderStatus;
 
 import java.math.BigDecimal;
@@ -25,5 +23,5 @@ public interface OrderService {
     OrderResponseDTO getOrderBySerialNumber(String serialNumber);
     List<OrderHistoryResponseDTO> getOrdersByStatus(OrderStatus status);
     void cancelOrder(Long orderId) throws CustomerException;
-
+    List<RevenueOverTimeDTO> getRevenueOverTime(LocalDateTime from, LocalDateTime to);
 }

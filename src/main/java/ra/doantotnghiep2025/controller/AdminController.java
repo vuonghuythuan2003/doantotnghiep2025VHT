@@ -1,3 +1,4 @@
+// File: src/main/java/ra/doantotnghiep2025/controller/AdminController.java
 package ra.doantotnghiep2025.controller;
 
 import jakarta.validation.Valid;
@@ -41,7 +42,8 @@ public class AdminController {
     private CategoryService categoryService;
     @Autowired
     private AuthService authService;
-    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
+
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponseDTO>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -135,7 +137,7 @@ public class AdminController {
             ProductReponseDTO updatedProduct = adminService.updateProductById(productId, productRequestDTO);
             return ResponseEntity.ok(updatedProduct);
         } catch (CustomerException e) {
-            throw e; // Ném lại ngoại lệ để được xử lý bởi GlobalExceptionHandler (nếu có)
+            throw e;
         } catch (Exception e) {
             throw new CustomerException("Lỗi không xác định khi cập nhật sản phẩm: " + e.getMessage());
         }
@@ -213,7 +215,7 @@ public class AdminController {
 
     @GetMapping("/orders/status/{orderStatus}")
     public ResponseEntity<Page<OrderResponseDTO>> getOrdersByStatus(@Valid
-            @PathVariable OrderStatus orderStatus, Pageable pageable) {
+                                                                    @PathVariable OrderStatus orderStatus, Pageable pageable) {
         Page<OrderResponseDTO> orders = orderService.getOrdersByStatus(orderStatus, pageable);
         return ResponseEntity.ok(orders);
     }
@@ -240,20 +242,21 @@ public class AdminController {
         return ResponseEntity.ok(orderService.getSalesRevenueOverTime(from, to));
     }
 
+    @GetMapping("/reports/revenue-over-time")
+    public ResponseEntity<List<RevenueOverTimeDTO>> getRevenueOverTime(
+            @Valid
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        List<RevenueOverTimeDTO> revenueOverTime = orderService.getRevenueOverTime(from, to);
+        return ResponseEntity.ok(revenueOverTime);
+    }
+
     @GetMapping("/reports/best-seller-products")
     public List<BestSellerProductDTO> getBestSellerProducts(
             @Valid
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         return orderDetailService.getBestSellerProducts(from, to);
-    }
-
-    @GetMapping("/reports/most-liked-products")
-    public List<MostLikedProductDTO> getMostLikedProducts(
-            @Valid
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        return productService.getMostLikedProducts(from, to);
     }
 
     @GetMapping("/reports/revenue-by-category")

@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +22,6 @@ import ra.doantotnghiep2025.security.UserPrinciple;
 import ra.doantotnghiep2025.security.jwt.JwtProvider;
 import ra.doantotnghiep2025.service.AuthService;
 import ra.doantotnghiep2025.service.EmailService;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -48,25 +49,36 @@ public class AuthServiceImp implements AuthService {
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
 
+    // File: AuthServiceImp.java (hoặc tương tự)
+    // File: AuthServiceImp.java (hoặc tương tự)
+
     @Override
     public UserLoginResponse login(UserLoginRequestDto userLoginRequestDTO) {
         System.out.println("Đăng nhập với username: " + userLoginRequestDTO.getUsername());
         System.out.println("Mật khẩu gửi lên: " + userLoginRequestDTO.getPassword());
 
-        Authentication authentication = authenticationProvider.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        userLoginRequestDTO.getUsername(),
-                        userLoginRequestDTO.getPassword())
-        );
+        try {
+            Authentication authentication = authenticationProvider.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            userLoginRequestDTO.getUsername(),
+                            userLoginRequestDTO.getPassword())
+            );
 
-        UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
-        return UserLoginResponse.builder()
-                .userId(userPrinciple.getUser().getId()) // Thêm userId từ User entity
-                .username(userPrinciple.getUsername())
-                .typeToken("Bearer Token")
-                .accessToken(jwtProvider.generateToken(userPrinciple))
-                .roles(userPrinciple.getUser().getRoles())
-                .build();
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            return UserLoginResponse.builder()
+                    .userId(userPrinciple.getUser().getId())
+                    .username(userPrinciple.getUsername())
+                    .typeToken("Bearer Token")
+                    .accessToken(jwtProvider.generateToken(userPrinciple))
+                    .roles(userPrinciple.getUser().getRoles())
+                    .build();
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Tai khoan hoac mat khau khong dung");
+        } catch (DisabledException e) {
+            throw new DisabledException("Tai khoan cua ban da bi khoa");
+        } catch (Exception e) {
+            throw new RuntimeException("Da xay ra loi trong qua trinh dang nhap: " + e.getMessage());
+        }
     }
 
     @Override
@@ -150,12 +162,6 @@ public class AuthServiceImp implements AuthService {
 
         if (requestDTO.getFullname() != null && !requestDTO.getFullname().trim().isEmpty()) {
             user.setFullname(requestDTO.getFullname());
-        }
-        if (requestDTO.getPhone() != null && !requestDTO.getPhone().trim().isEmpty()) {
-            if (userRepository.existsByPhone(requestDTO.getPhone()) && !requestDTO.getPhone().equals(user.getPhone())) {
-                throw new RuntimeException("Số điện thoại đã tồn tại");
-            }
-            user.setPhone(requestDTO.getPhone());
         }
         if (requestDTO.getAvatar() != null) {
             user.setAvatar(requestDTO.getAvatar());
