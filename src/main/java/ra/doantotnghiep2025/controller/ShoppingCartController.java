@@ -212,4 +212,60 @@ public class ShoppingCartController {
             return value;
         }
     }
+    @PostMapping("/checkout/cod")
+    public ResponseEntity<Map<String, String>> checkoutCOD(
+            @Valid @RequestParam Long userId,
+            @RequestParam String receiveAddress,
+            @RequestParam String receiveName,
+            @RequestParam String receivePhone,
+            @RequestParam(required = false) String note) {
+        Map<String, String> response = new HashMap<>();
+
+        // Validate receivePhone
+        if (receivePhone == null || receivePhone.length() > 15) {
+            log.warn("Invalid receivePhone: {}", receivePhone);
+            response.put("message", "Số điện thoại không hợp lệ! Độ dài tối đa là 15 ký tự.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        if (!receivePhone.matches("\\d{10,11}")) {
+            log.warn("Invalid receivePhone format: {}", receivePhone);
+            response.put("message", "Số điện thoại phải có 10-11 chữ số!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            List<ShoppingCartResponseDTO> cartItems = shoppingCartService.getShoppingCartItems(userId);
+            if (cartItems == null || cartItems.isEmpty()) {
+                log.warn("Cart is empty for userId: {}", userId);
+                response.put("message", "Giỏ hàng trống, không thể thanh toán!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            double total = cartItems.stream()
+                    .mapToDouble(item -> {
+                        double price = (item.getUnitPrice() == null ? 0.0 : item.getUnitPrice().doubleValue());
+                        int quantity = item.getOrderQuantity();
+                        log.info("Item: {}, Price: {}, Quantity: {}", item.getProductName(), price, quantity);
+                        return price * quantity;
+                    })
+                    .sum();
+
+            log.info("Calculated total for userId {}: {}", userId, total);
+            if (total <= 0) {
+                log.warn("Invalid total (<= 0) for userId: {}", userId);
+                response.put("message", "Tổng tiền không hợp lệ! Tổng tiền phải lớn hơn 0.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Tạo đơn hàng với phương thức thanh toán COD
+            OrderResponseDTO order = shoppingCartService.checkout(userId, receiveAddress, receiveName, receivePhone, note);
+            log.info("Order created with ID: {}, cart cleared", order.getOrderId());
+            response.put("orderId", order.getOrderId().toString());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error processing COD checkout: {}", e.getMessage(), e);
+            response.put("message", "Lỗi khi xử lý thanh toán COD: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

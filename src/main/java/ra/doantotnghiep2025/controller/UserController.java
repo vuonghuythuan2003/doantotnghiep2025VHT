@@ -74,7 +74,6 @@ public class UserController {
     @GetMapping("/history/getAll")
     public ResponseEntity<List<OrderHistoryResponseDTO>> getOrderHistory(@Valid @RequestParam Long userId) {
         System.out.println("Fetching order history for userId: " + userId); // Debug
-
         return ResponseEntity.ok(orderService.getOrderHistory(userId));
     }
 
