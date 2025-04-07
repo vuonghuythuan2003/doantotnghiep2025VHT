@@ -22,6 +22,8 @@ import ra.doantotnghiep2025.security.UserPrinciple;
 import ra.doantotnghiep2025.security.jwt.JwtProvider;
 import ra.doantotnghiep2025.service.AuthService;
 import ra.doantotnghiep2025.service.EmailService;
+import ra.doantotnghiep2025.service.UploadFileService;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +50,8 @@ public class AuthServiceImp implements AuthService {
     private EmailService emailService;
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
-
+    @Autowired
+    private UploadFileService uploadFileService;
     // File: AuthServiceImp.java (hoặc tương tự)
     // File: AuthServiceImp.java (hoặc tương tự)
 
@@ -163,11 +166,16 @@ public class AuthServiceImp implements AuthService {
         if (requestDTO.getFullname() != null && !requestDTO.getFullname().trim().isEmpty()) {
             user.setFullname(requestDTO.getFullname());
         }
-        if (requestDTO.getAvatar() != null) {
-            user.setAvatar(requestDTO.getAvatar());
+        if (requestDTO.getPhone() != null && !requestDTO.getPhone().trim().isEmpty()) {
+            user.setPhone(requestDTO.getPhone());
         }
         if (requestDTO.getAddress() != null && !requestDTO.getAddress().trim().isEmpty()) {
             user.setAddress(requestDTO.getAddress());
+        }
+        if (requestDTO.getAvatar() != null && !requestDTO.getAvatar().isEmpty()) {
+            // Xử lý tải lên tệp và lấy URL
+            String avatarUrl = uploadFileService.uploadFile(requestDTO.getAvatar()); // Giả sử có UploadFileService
+            user.setAvatar(avatarUrl);
         }
 
         user.setUpdatedAt(LocalDateTime.now());

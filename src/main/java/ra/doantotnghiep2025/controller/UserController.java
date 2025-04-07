@@ -35,7 +35,7 @@ public class UserController {
     }
     @PutMapping("/account")
     public ResponseEntity<UserResponseDTO> updateUserAccount(@Valid @RequestParam Long userId,
-                                                             @RequestBody UserUpdateRequestDTO requestDTO) {
+                                                             @ModelAttribute UserUpdateRequestDTO requestDTO) {
         UserResponseDTO updatedUser = userService.updateUserAccount(userId, requestDTO);
         return ResponseEntity.ok(updatedUser);
     }
