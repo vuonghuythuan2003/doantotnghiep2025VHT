@@ -129,6 +129,7 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Giỏ hàng trống!");
         }
 
+        // Kiểm tra số lượng tồn kho trước khi xử lý
         for (ShoppingCart cartItem : cartItems) {
             Products product = cartItem.getProduct();
             if (product.getProductQuantity() < cartItem.getOrderQuantity()) {
@@ -161,8 +162,11 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
 
         for (ShoppingCart cartItem : cartItems) {
             Products product = cartItem.getProduct();
+            // Giảm số lượng tồn kho
             product.setProductQuantity(product.getProductQuantity() - cartItem.getOrderQuantity());
-            productRepository.save(product);
+            // Tăng số lượng đã bán
+            product.setSoldQuantity(product.getSoldQuantity() + cartItem.getOrderQuantity());
+            productRepository.save(product); // Lưu thay đổi cả productQuantity và soldQuantity
 
             OrderDetail orderDetail = OrderDetail.builder()
                     .order(order)

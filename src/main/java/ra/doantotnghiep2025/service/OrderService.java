@@ -21,7 +21,7 @@ public interface OrderService {
     long getInvoiceCountOverTime(LocalDateTime from, LocalDateTime to);
     List<OrderHistoryResponseDTO> getOrderHistory(Long userId);
     OrderResponseDTO getOrderBySerialNumber(String serialNumber);
-    List<OrderHistoryResponseDTO> getOrdersByStatus(OrderStatus status);
+    List<OrderHistoryResponseDTO> getOrdersByStatus(OrderStatus status, Long userId);
     void cancelOrder(Long orderId) throws CustomerException;
     List<RevenueOverTimeDTO> getRevenueOverTime(LocalDateTime from, LocalDateTime to);
 }

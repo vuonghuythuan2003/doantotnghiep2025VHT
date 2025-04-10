@@ -24,6 +24,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     List<Order> findByUser(User user, Sort sort);
     Optional<Order> findBySerialNumber(String serialNumber);
-    List<Order> findByStatus(OrderStatus status);
     Optional<Order> findByOrderIdAndStatus(Long orderId, OrderStatus status);
+    List<Order> findByUserAndStatus(User user, OrderStatus status); // Thêm phương thức này
 }

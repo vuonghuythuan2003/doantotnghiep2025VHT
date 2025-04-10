@@ -195,8 +195,10 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public List<OrderHistoryResponseDTO> getOrdersByStatus(OrderStatus status) {
-        List<Order> orders = orderRepository.findByStatus(status);
+    public List<OrderHistoryResponseDTO> getOrdersByStatus(OrderStatus status, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
+        List<Order> orders = orderRepository.findByUserAndStatus(user, status);
         return orders.stream().map(this::mapToOrderHistoryResponseDTO).collect(Collectors.toList());
     }
 

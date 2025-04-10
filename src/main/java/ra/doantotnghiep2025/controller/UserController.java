@@ -84,8 +84,12 @@ public class UserController {
     }
 
     @GetMapping("/history/{orderStatus}")
-    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrdersByStatus(@Valid @PathVariable OrderStatus orderStatus) {
-        List<OrderHistoryResponseDTO> orders = orderService.getOrdersByStatus(orderStatus);
+    public ResponseEntity<List<OrderHistoryResponseDTO>> getOrdersByStatus(
+            @Valid @PathVariable OrderStatus orderStatus,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername(); // Lấy username từ UserDetails
+        Long userId = userService.getUserIdByUsername(username); // Giả sử AuthService có phương thức này
+        List<OrderHistoryResponseDTO> orders = orderService.getOrdersByStatus(orderStatus, userId);
         return ResponseEntity.ok(orders);
     }
     @PutMapping("/history/{orderId}/cancel")
