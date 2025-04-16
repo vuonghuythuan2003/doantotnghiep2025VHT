@@ -206,16 +206,39 @@ public class AdminController {
                     .body("Đã xảy ra lỗi khi xóa danh mục: " + e.getMessage());
         }
     }
-
     @GetMapping("/orders")
-    public ResponseEntity<Page<OrderResponseDTO>> getAllOrders(Pageable pageable) {
+    public ResponseEntity<Page<OrderResponseDTO>> getAllOrders(
+            @Valid
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        String[] validSortFields = {"orderId", "serialNumber", "totalPrice", "createdAt", "receivedAt"};
+        if (!Arrays.asList(validSortFields).contains(sortBy)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortBy + ". Valid fields are: " + String.join(", ", validSortFields));
+        }
+
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<OrderResponseDTO> orders = orderService.getAllOrders(pageable);
         return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/orders/status/{orderStatus}")
-    public ResponseEntity<Page<OrderResponseDTO>> getOrdersByStatus(@Valid
-                                                                    @PathVariable OrderStatus orderStatus, Pageable pageable) {
+    public ResponseEntity<Page<OrderResponseDTO>> getOrdersByStatus(
+            @Valid
+            @PathVariable OrderStatus orderStatus,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        String[] validSortFields = {"orderId", "serialNumber", "totalPrice", "createdAt", "receivedAt"};
+        if (!Arrays.asList(validSortFields).contains(sortBy)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortBy + ". Valid fields are: " + String.join(", ", validSortFields));
+        }
+
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<OrderResponseDTO> orders = orderService.getOrdersByStatus(orderStatus, pageable);
         return ResponseEntity.ok(orders);
     }
