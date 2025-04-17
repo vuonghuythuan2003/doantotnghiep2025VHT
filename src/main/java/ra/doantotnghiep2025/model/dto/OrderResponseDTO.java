@@ -4,6 +4,7 @@ import lombok.*;
 import ra.doantotnghiep2025.model.entity.OrderStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -24,4 +25,5 @@ public class OrderResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime receivedAt;
     private String payUrl;
+    private List<OrderDetailResponseDTO> items;
 }

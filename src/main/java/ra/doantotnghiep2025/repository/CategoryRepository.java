@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import ra.doantotnghiep2025.model.entity.Category;
-import ra.doantotnghiep2025.model.entity.Products;
 
 import java.util.List;
 

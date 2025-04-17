@@ -111,14 +111,12 @@ public class OrderServiceImp implements OrderService {
     public List<RevenueOverTimeDTO> getRevenueOverTime(LocalDateTime from, LocalDateTime to) {
         List<Order> orders = orderRepository.findByCreatedAtBetween(from, to);
 
-        // Nhóm đơn hàng theo ngày và tính tổng doanh thu
         Map<LocalDate, BigDecimal> revenueByDate = orders.stream()
                 .collect(Collectors.groupingBy(
                         order -> order.getCreatedAt().toLocalDate(),
                         Collectors.reducing(BigDecimal.ZERO, Order::getTotalPrice, BigDecimal::add)
                 ));
 
-        // Chuyển đổi thành danh sách RevenueOverTimeDTO
         return revenueByDate.entrySet().stream()
                 .map(entry -> RevenueOverTimeDTO.builder()
                         .date(entry.getKey())
@@ -234,6 +232,17 @@ public class OrderServiceImp implements OrderService {
     }
 
     private OrderResponseDTO mapToOrderResponseDTO(Order order) {
+        List<OrderDetailResponseDTO> items = order.getOrderDetails().stream()
+                .map(detail -> OrderDetailResponseDTO.builder()
+                        .id(detail.getId())
+                        .name(detail.getName())
+                        .unitPrice(detail.getUnitPrice())
+                        .orderQuantity(detail.getOrderQuantity())
+                        .productId(detail.getProduct().getProductId())
+                        .productName(detail.getProduct().getProductName()) // Ánh xạ productName
+                        .build())
+                .collect(Collectors.toList());
+
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .serialNumber(order.getSerialNumber())
@@ -246,6 +255,7 @@ public class OrderServiceImp implements OrderService {
                 .receivePhone(order.getReceivePhone().trim())
                 .createdAt(order.getCreatedAt())
                 .receivedAt(order.getReceivedAt())
+                .items(items) // Gắn danh sách chi tiết đơn hàng
                 .build();
     }
 }

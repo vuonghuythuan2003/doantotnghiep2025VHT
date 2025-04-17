@@ -1,4 +1,3 @@
-// File: src/main/java/ra/doantotnghiep2025/model/dto/RevenueOverTimeDTO.java
 package ra.doantotnghiep2025.model.dto;
 
 import lombok.AllArgsConstructor;
